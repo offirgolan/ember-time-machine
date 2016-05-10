@@ -31,17 +31,17 @@ export default Ember.Mixin.create({
     return this._super(...arguments);
   },
 
-  undo(numChanges = 1) {
+  undo(numSnapsToUndo = 1) {
     const snapshots = this.get('snapshots');
-    const maxChanges = snapshots.get('length');
+    const numSnapshots = snapshots.get('length');
 
     let snapshotsToApply = {};
-    for(let i = maxChanges - 1; i >= maxChanges - numChanges; i--) {
+    for(let i = numSnapshots - 1; i >= numSnapshots - numSnapsToUndo; i--) {
       let snapshot = snapshots.objectAt(i);
       assign(snapshotsToApply, snapshot.before);
     }
     this.get('content').setProperties(snapshotsToApply);
-    this.decrementProperty('_snapshotIndex', numChanges);
+    this.decrementProperty('_snapshotIndex', numSnapsToUndo);
   },
 
   undoAll() {
