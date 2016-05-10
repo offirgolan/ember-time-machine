@@ -1,5 +1,5 @@
 import Ember from 'ember';
-import SnapshotMixin from 'ember-snapshot/mixins/snapshot';
+import SnapshotMixin from 'ember-record-keeper/mixins/snapshot';
 import { module, test } from 'qunit';
 
 module('Unit | Mixin | snapshot');

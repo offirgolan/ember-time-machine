@@ -1,6 +1,4 @@
 // import Model from 'ember-data/model';
-import SnapshotObject from 'ember-snapshot';
+import { ObjectRecordKeeper } from 'ember-record-keeper';
 
-export default SnapshotObject.extend({
-
-});
+export default ObjectRecordKeeper.extend();

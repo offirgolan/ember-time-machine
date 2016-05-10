@@ -1,8 +1,4 @@
-// import Ember from 'ember';
-
-// const assign = Ember.assign || Ember.merge;
-
-export default class Snapshot {
+export default class Record {
   constructor(key, before, after) {
     this.key = key;
     this.beforeValue = before;

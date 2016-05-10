@@ -1,5 +1,7 @@
-import Ember from 'ember';
-import SnapshotMixin from './mixin';
+import ObjectProxy from './proxies/object';
+import ArrayProxy from './proxies/array';
 
-export default Ember.ObjectProxy.extend(SnapshotMixin);
-export { SnapshotMixin };
+export const ObjectRecordKeeper = ObjectProxy;
+export const ArrayRecordKeeper = ArrayProxy;
+
+export default { ObjectRecordKeeper, ArrayRecordKeeper };

@@ -1,5 +1,5 @@
 {
-  "name": "ember-snapshot",
+  "name": "ember-record-keeper",
   "version": "0.0.0",
   "description": "The default blueprint for ember-cli addons.",
   "directories": {

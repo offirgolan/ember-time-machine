@@ -1,1 +1,9 @@
-{{outlet}}
+<h2>Model</h2>
+{{input value=model.firstName}}
+
+<h2>Model.Friend</h2>
+{{input value=model.friend.firstName}}
+
+<h2>Actions</h2>
+<button type="button" name="button" {{action 'undo'}}>Undo</button>
+<button type="button" name="button" {{action 'undoAll'}}>Undo All</button>
