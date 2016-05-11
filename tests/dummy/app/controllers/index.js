@@ -2,12 +2,20 @@ import Ember from 'ember';
 
 export default Ember.Controller.extend({
   actions: {
-    undo(num = 1) {
-      this.get('model').undo(num);
+    undo() {
+      this.get('model').undo();
+    },
+
+    redo() {
+      this.get('model').redo();
     },
 
     undoAll() {
       this.get('model').undoAll();
+    },
+
+    redoAll() {
+      this.get('model').redoAll();
     }
   }
 });

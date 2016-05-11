@@ -6,6 +6,8 @@ const {
   get,
   set,
   isNone,
+  isEmpty,
+  computed,
   A: emberArray
 } = Ember;
 
@@ -18,6 +20,15 @@ export default Ember.Mixin.create({
   _meta: null,
   _path: null,
   __isRecordKeeper__: true,
+
+  canUndo: computed('records.[]', '_meta.currIndex', function() {
+    return !isEmpty(this.get('records')) && this.get('_meta.currIndex') > -1;
+  }),
+
+  canRedo: computed('records.[]', '_meta.currIndex', function() {
+    const records = this.get('records');
+    return !isEmpty(records) && this.get('_meta.currIndex') < records.length - 1;
+  }),
 
   init() {
     this._super(...arguments);
@@ -73,28 +84,60 @@ export default Ember.Mixin.create({
     return this._super(...arguments);
   },
 
-  undo(numRecordsToUndo = 1) {
+  undo(numUndos = 1) {
     const records = this.get('records');
-    const currIndex = this.get('_meta.currIndex');
-
+    let currIndex = this.get('_meta.currIndex');
     let recordsToApply = {};
-    for(let i = currIndex; i > currIndex - numRecordsToUndo && i >= 0; i--) {
-      let record = records.objectAt(i);
-      let change = {};
-      change[record.key] = record.before;
-      assign(recordsToApply, change);
-      this.decrementProperty('_meta.currIndex');
+
+    if(!this.get('canUndo')) {
+      return;
     }
+
+    for(let i = numUndos; i > 0 && currIndex > -1; i--) {
+      let record = records.objectAt(currIndex);
+      if(!isNone(record)) {
+        let change = {};
+        change[record.key] = record.before;
+        assign(recordsToApply, change);
+        currIndex--;
+      }
+    }
+
     this.get('content').setProperties(recordsToApply);
+    this.set('_meta.currIndex', currIndex);
   },
 
   undoAll() {
     return this.undo(this.get('_meta.currIndex') + 1);
   },
 
-  redo() {},
-  redoAll() {},
+  redo(numRedos = 1) {
+    const records = this.get('records');
+    let currIndex = this.get('_meta.currIndex');
+    let recordsToApply = {};
+
+    if(!this.get('canRedo')) {
+      return;
+    }
+
+    for(let i = numRedos; i > 0 && currIndex < records.length; i--) {
+      let record = records.objectAt(currIndex + 1);
+      if(!isNone(record)) {
+        let change = {};
+        change[record.key] = record.after;
+        assign(recordsToApply, change);
+        currIndex++;
+      }
+    }
+
+    this.get('content').setProperties(recordsToApply);
+    this.set('_meta.currIndex', currIndex);
+  },
+
+  redoAll() {
+    return this.redo(this.get('records').length - this.get('_meta.currIndex') - 1);
+  },
 
   undoWhere() {}, // {key: 'foo'} or { value: 'bar'}
-  redoWhere() {}, // {key: 'foo'} or { value: 'bar'}
+  redoWhere() {}, // {key: 'foo'} or { value: 'bar'},
 });

@@ -8,5 +8,7 @@
 {{input value=model.friend.friend.firstName}}
 
 <h2>Actions</h2>
-<button type="button" name="button" {{action 'undo'}}>Undo</button>
-<button type="button" name="button" {{action 'undoAll'}}>Undo All</button>
+<button type="button" name="button" {{action 'undo'}} disabled={{not model.canUndo}}>Undo</button>
+<button type="button" name="button" {{action 'redo'}} disabled={{not model.canRedo}}>Redo</button>
+<button type="button" name="button" {{action 'undoAll'}} disabled={{not model.canUndo}}>Undo All</button>
+<button type="button" name="button" {{action 'redoAll'}} disabled={{not model.canRedo}}>Redo All</button>
