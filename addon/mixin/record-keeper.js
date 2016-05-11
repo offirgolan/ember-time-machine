@@ -12,21 +12,22 @@ const {
 const assign = Ember.assign || Ember.merge;
 
 export default Ember.Mixin.create({
-  snapshots: null,
-  path: null,
-  _didInit: false,
+  records: null,
+
+  // Private
   _meta: null,
+  _path: null,
   __isRecordKeeper__: true,
 
   init() {
     this._super(...arguments);
 
-    const snapshots = this.get('snapshots');
-    const path = this.get('path');
+    const records = this.get('records');
+    const path = this.get('_path');
     const meta = this.get('_meta');
 
-    set(this, 'snapshots', isNone(snapshots) ? emberArray() : snapshots);
-    set(this, 'path', isNone(path) ? emberArray() : path);
+    set(this, 'records', isNone(records) ? emberArray() : records);
+    set(this, '_path', isNone(path) ? emberArray() : path);
     set(this, '_meta', isNone(meta) ? { currIndex: -1 } : meta);
   },
 
@@ -36,42 +37,59 @@ export default Ember.Mixin.create({
     if(value instanceof Ember.Object && !value.__isRecordKeeper__) {
       return ObjectRecordKeeper.create({
         content: value,
-        snapshots: this.get('snapshots'),
-        path: this.get('path').concat(key),
+        records: this.get('records'),
+        _path: this.get('_path').concat(key),
         _meta: this.get('_meta')
       });
     }
+
     return value;
   },
 
   setUnknownProperty(key, value) {
-    const snapshots = this.get('snapshots');
+    const records = this.get('records');
     const content = this.get('content');
+    let currIndex = this.get('_meta.currIndex');
 
-    if(!isNone(snapshots)) {
-      const path = this.get('path').concat(key).join('.');
-      snapshots.pushObject(new Record(path, get(content, key), value));
-      this.incrementProperty('_meta.currIndex');
+    if(isNone(records)) {
+      return;
     }
+
+    if(currIndex !== records.length - 1) {
+      const recordsToRemove = [];
+      currIndex++;
+
+      for(; currIndex < records.length; currIndex++) {
+        recordsToRemove.push(records[currIndex]);
+      }
+      records.removeObjects(recordsToRemove);
+      this.set('_meta.currIndex', records.length - 1);
+    }
+
+    const path = this.get('_path').concat(key).join('.');
+    records.pushObject(new Record(path, get(content, key), value));
+    this.incrementProperty('_meta.currIndex');
 
     return this._super(...arguments);
   },
 
-  undo(numSnapsToUndo = 1) {
-    const snapshots = this.get('snapshots');
+  undo(numRecordsToUndo = 1) {
+    const records = this.get('records');
     const currIndex = this.get('_meta.currIndex');
 
-    let snapshotsToApply = {};
-    for(let i = currIndex; i > currIndex - numSnapsToUndo; i--) {
-      let snapshot = snapshots.objectAt(i);
-      assign(snapshotsToApply, snapshot.before);
+    let recordsToApply = {};
+    for(let i = currIndex; i > currIndex - numRecordsToUndo && i >= 0; i--) {
+      let record = records.objectAt(i);
+      let change = {};
+      change[record.key] = record.before;
+      assign(recordsToApply, change);
+      this.decrementProperty('_meta.currIndex');
     }
-    this.get('content').setProperties(snapshotsToApply);
-    this.decrementProperty('_meta.currIndex', numSnapsToUndo);
+    this.get('content').setProperties(recordsToApply);
   },
 
   undoAll() {
-    return this.undo(this.get('snapshots.length'));
+    return this.undo(this.get('_meta.currIndex') + 1);
   },
 
   redo() {},
@@ -79,5 +97,4 @@ export default Ember.Mixin.create({
 
   undoWhere() {}, // {key: 'foo'} or { value: 'bar'}
   redoWhere() {}, // {key: 'foo'} or { value: 'bar'}
-
 });
