@@ -8,7 +8,7 @@ const {
 } = Ember;
 
 export default function wrapValue(obj, key, value) {
-  if(value && value instanceof Ember.Object && !value.__isRecordKeeper__) {
+  if(value && value instanceof Ember.Object && !value.__isTimeMachine__) {
     return ObjectRecordKeeper.create({
       content: value,
       records: obj.get('records'),
@@ -17,7 +17,7 @@ export default function wrapValue(obj, key, value) {
     });
   }
 
-  if(value && isArray(value) && !value.__isRecordKeeper__) {
+  if(value && isArray(value) && !value.__isTimeMachine__) {
     return ArrayRecordKeeper.create({
       content: emberArray(value),
       records: obj.get('records'),

@@ -16,7 +16,6 @@ export default Ember.Mixin.create({
   // Private
   _meta: null,
   _path: null,
-  __isRecordKeeper__: true,
 
   canUndo: computed('records.[]', '_meta.currIndex', function() {
     return !isEmpty(this.get('records')) && this.get('_meta.currIndex') > -1;

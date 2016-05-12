@@ -7,7 +7,7 @@ const {
   isNone
 } = Ember;
 
-export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
+const ArrayProxy = Ember.ArrayProxy.extend(RecordKeeperMixin, {
   objectAtContent(index) {
     const value = this._super(...arguments);
     return wrapValue(this, index, value);
@@ -36,3 +36,9 @@ export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
     return this._super(...arguments);
   }
 });
+
+ArrayProxy.reopenClass({
+  __isTimeMachine__: true
+});
+
+export default ArrayProxy;

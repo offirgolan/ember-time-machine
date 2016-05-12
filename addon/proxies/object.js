@@ -8,7 +8,7 @@ const {
   isNone
 } = Ember;
 
-export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
+const ObjectProxy = Ember.ObjectProxy.extend(RecordKeeperMixin, {
   unknownProperty(key) {
     const value = this._super(...arguments);
     return wrapValue(this, key, value);
@@ -30,3 +30,9 @@ export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
     return this._super(...arguments);
   }
 });
+
+ObjectProxy.reopenClass({
+  __isTimeMachine__: true
+});
+
+export default ObjectProxy;
