@@ -2,5 +2,5 @@
 'use strict';
 
 module.exports = {
-  name: 'ember-record-keeper'
+  name: 'ember-time-machine'
 };

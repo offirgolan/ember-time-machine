@@ -50,7 +50,7 @@ export default Ember.Mixin.create({
       return;
     }
 
-    for(let i = numUndos; i > 0 && currIndex > -1; i--) {
+    for(let i = 0; i < numUndos && currIndex > -1; i++) {
       let record = records.objectAt(currIndex);
 
       if(isNone(record)) {
@@ -64,13 +64,14 @@ export default Ember.Mixin.create({
         let change = {};
         change[record.fullPath] = record.before;
         assign(recordsToApply, change);
-        currIndex--;
       }
+
+      currIndex--;
     }
 
-    Object.keys(arrayRecords).forEach(key => {
-      const records = arrayRecords[key];
-      const array = this.get(key);
+    Object.keys(arrayRecords).forEach(path => {
+      const records = arrayRecords[path];
+      const array = content.get(path);
       let arrayClone = emberArray(array.slice(0));
 
       records.forEach(record => {
@@ -79,11 +80,9 @@ export default Ember.Mixin.create({
         } else if(record.type === 'DELETE') {
           arrayClone.replace(record.key, 0, record.before);
         }
-
-        currIndex--;
       });
 
-      array.replaceContent(0, array.get('length'), arrayClone);
+      array.replace(0, array.get('length'), arrayClone);
     });
 
     content.setProperties(recordsToApply);
@@ -101,7 +100,7 @@ export default Ember.Mixin.create({
       return;
     }
 
-    for(let i = numRedos; i > 0 && currIndex < records.length; i--) {
+    for(let i = 0; i < numRedos && currIndex < records.length; i++) {
       let record = records.objectAt(currIndex + 1);
 
       if(isNone(record)) {
@@ -115,26 +114,25 @@ export default Ember.Mixin.create({
         let change = {};
         change[record.fullPath] = record.after;
         assign(recordsToApply, change);
-        currIndex++;
       }
+
+      currIndex++;
     }
 
-    Object.keys(arrayRecords).forEach(key => {
-      const records = arrayRecords[key];
-      const array = this.get(key);
+    Object.keys(arrayRecords).forEach(path => {
+      const records = arrayRecords[path];
+      const array = content.get(path);
       let arrayClone = emberArray(array.slice(0));
 
       records.forEach(record => {
         if(record.type === 'ADD') {
-          arrayClone.replace(record.key, record.after.length, []);
+          arrayClone.replace(record.key, 0, record.after);
         } else if(record.type === 'DELETE') {
-          arrayClone.replace(record.key, 0, record.before);
+          arrayClone.replace(record.key, record.before.length, []);
         }
-        
-        currIndex++;
       });
 
-      array.replaceContent(0, array.get('length'), arrayClone);
+      array.replace(0, array.get('length'), arrayClone);
     });
 
     content.setProperties(recordsToApply);
@@ -148,9 +146,6 @@ export default Ember.Mixin.create({
   redoAll() {
     return this.redo(this.get('records').length - this.get('_meta.currIndex') - 1);
   },
-
-  undoWhere() {}, // {key: 'foo'} or { value: 'bar'}
-  redoWhere() {}, // {key: 'foo'} or { value: 'bar'},
 
   _removeRecordsAfterChange() {
     const records = this.get('records');

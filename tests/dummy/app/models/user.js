@@ -1,4 +1,4 @@
 // import Model from 'ember-data/model';
-import { ObjectRecordKeeper } from 'ember-record-keeper';
+import { TimeMachine } from 'ember-time-machine';
 
-export default ObjectRecordKeeper.extend();
+export default TimeMachine.extend();

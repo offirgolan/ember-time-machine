@@ -1,7 +1,7 @@
 import Ember from 'ember';
-import RecordKeeperMixin from 'ember-record-keeper/mixins/record-keeper';
-import Record from 'ember-record-keeper/-private/Record';
-import wrapValue from 'ember-record-keeper/utils/wrap-value';
+import RecordKeeperMixin from 'ember-time-machine/mixins/time-machine';
+import Record from 'ember-time-machine/-private/Record';
+import wrapValue from 'ember-time-machine/utils/wrap-value';
 
 const {
   isNone

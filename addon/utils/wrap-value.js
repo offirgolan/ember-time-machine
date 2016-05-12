@@ -1,6 +1,6 @@
 import Ember from 'ember';
-import ArrayRecordKeeper from 'ember-record-keeper/proxies/array';
-import ObjectRecordKeeper from 'ember-record-keeper/proxies/object';
+import ArrayRecordKeeper from 'ember-time-machine/proxies/array';
+import ObjectRecordKeeper from 'ember-time-machine/proxies/object';
 
 const {
   isArray,
