@@ -1,4 +1,8 @@
-// import Model from 'ember-data/model';
-import { TimeMachine } from 'ember-time-machine';
+import DS from 'ember-data';
 
-export default TimeMachine.extend();
+const { attr } = DS;
+
+export default DS.Model.extend({
+  firstName: attr('string'),
+  friends: DS.hasMany('user')
+});

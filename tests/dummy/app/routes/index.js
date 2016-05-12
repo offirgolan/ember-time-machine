@@ -1,14 +1,19 @@
 import Ember from 'ember';
-import User from '../models/user';
+import TimeMachine from 'ember-time-machine';
 
 export default Ember.Route.extend({
   model() {
-    return User.create(Ember.getOwner(this).ownerInjection(), {
+    return TimeMachine.Object.create(Ember.getOwner(this).ownerInjection(), {
       content: Ember.Object.create({
         friend: Ember.Object.create({
           friend: Ember.Object.create()
         }),
-        tags: Ember.A(['foo'])
+        tags: Ember.A(['foo']),
+        dsModel: this.store.createRecord('user', {
+          friends: [
+            this.store.createRecord('user')
+          ]
+        })
       })
     });
   }
