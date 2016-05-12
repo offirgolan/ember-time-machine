@@ -1,3 +1,5 @@
+<h1>Object</h1>
+
 <h2>User</h2>
 {{input value=model.firstName}}
 
@@ -6,6 +8,18 @@
 
 <h2>User.Friend.Friend</h2>
 {{input value=model.friend.friend.firstName}}
+
+<h1>Array</h1>
+
+<h2>User.Tags</h2>
+<ul>
+  {{#each model.tags as |tag|}}
+    <li>{{input value=(mut tag)}} <span><button type="button" name="button" {{action 'removeTag' tag}}>Remove</button></span></li>
+  {{/each}}
+</ul>
+
+<label for="">Add Tag</label>
+{{input value=tag enter=(action 'addTag')}}
 
 <h2>Actions</h2>
 <button type="button" name="button" {{action 'undo'}} disabled={{not model.canUndo}}>Undo</button>

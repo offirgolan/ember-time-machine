@@ -1,9 +1,11 @@
 export default class Record {
-  constructor(key, before, after) {
+  constructor(path, key, before, after, isArray = false) {
+    this.path = path || [];
     this.key = key;
     this.before = before;
     this.after = after;
     this.timestamp = (new Date()).toString();
+    this.isArray = isArray;
 
     if(!isUndefined(before) && !isUndefined(after)) {
       this.type = 'MODIFY';
@@ -12,6 +14,14 @@ export default class Record {
     } else {
       this.type = 'DELETE';
     }
+  }
+
+  get pathString() {
+    return this.path.join('.');
+  }
+
+  get fullPath() {
+    return this.path.concat(this.key).join('.');
   }
 }
 

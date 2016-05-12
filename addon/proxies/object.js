@@ -1,8 +1,32 @@
 import Ember from 'ember';
-import RecordKeeperMixin from '../mixin/record-keeper';
+import RecordKeeperMixin from 'ember-record-keeper/mixins/record-keeper';
+import Record from 'ember-record-keeper/-private/Record';
+import wrapValue from '../utils/wrap-value';
 
-const ObjectRecordKeeper = Ember.ObjectProxy.extend(RecordKeeperMixin, {
+const {
+  get,
+  isNone
+} = Ember;
 
+export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
+  unknownProperty(key) {
+    const value = this._super(...arguments);
+    return wrapValue(this, key, value);
+  },
+
+  setUnknownProperty(key, value) {
+    const records = this.get('records');
+    const content = this.get('content');
+
+    if(isNone(records)) {
+      return;
+    }
+
+    this._removeRecordsAfterChange();
+
+    records.pushObject(new Record(this.get('_path'), key, get(content, key), value));
+    this.incrementProperty('_meta.currIndex');
+
+    return this._super(...arguments);
+  }
 });
-
-export default ObjectRecordKeeper;

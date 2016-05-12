@@ -2,6 +2,13 @@ import Ember from 'ember';
 
 export default Ember.Controller.extend({
   actions: {
+    addTag() {
+      this.get('model.tags').pushObject(this.get('tag'));
+      this.set('tag', '');
+    },
+    removeTag(tag) {
+      this.get('model.tags').removeObject(tag);
+    },
     undo() {
       this.get('model').undo();
     },
