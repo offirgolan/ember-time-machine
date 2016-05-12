@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import { setObject } from '../utils/object';
 
 const {
   set,
@@ -8,7 +9,6 @@ const {
   A: emberArray
 } = Ember;
 
-const assign = Ember.assign || Ember.merge;
 
 export default Ember.Mixin.create({
   records: null,
@@ -39,103 +39,29 @@ export default Ember.Mixin.create({
   },
 
   undo(numUndos = 1) {
-    const records = this.get('records');
-    const content = this.get('content');
-    let currIndex = this.get('_meta.currIndex');
-    let recordsToApply = {};
-    let arrayRecords = {};
-
     if(!this.get('canUndo')) {
       return;
     }
 
-    for(let i = 0; i < numUndos && currIndex > -1; i++) {
-      let record = records.objectAt(currIndex);
+    const changes = this._getChanges('undo', this.get('_meta.currIndex'), numUndos);
 
-      if(isNone(record)) {
-        continue;
-      }
+    this._applyArrayChanges('undo', changes.array);
+    this._applyObjectChanges('undo', changes.object);
 
-      if(record.isArray) {
-        arrayRecords[record.pathString] = arrayRecords[record.pathString] || [];
-        arrayRecords[record.pathString].push(record);
-      } else {
-        let change = {};
-        change[record.fullPath] = record.before;
-        assign(recordsToApply, change);
-      }
-
-      currIndex--;
-    }
-
-    Object.keys(arrayRecords).forEach(path => {
-      const records = arrayRecords[path];
-      const array = content.get(path);
-      let arrayClone = emberArray(array.slice(0));
-
-      records.forEach(record => {
-        if(record.type === 'ADD') {
-          arrayClone.replace(record.key, record.after.length, []);
-        } else if(record.type === 'DELETE') {
-          arrayClone.replace(record.key, 0, record.before);
-        }
-      });
-
-      array.replace(0, array.get('length'), arrayClone);
-    });
-
-    content.setProperties(recordsToApply);
-    this.set('_meta.currIndex', currIndex);
+    this.decrementProperty('_meta.currIndex', changes.total);
   },
 
   redo(numRedos = 1) {
-    const records = this.get('records');
-    const content = this.get('content');
-    let currIndex = this.get('_meta.currIndex');
-    let recordsToApply = {};
-    let arrayRecords = {};
-
     if(!this.get('canRedo')) {
       return;
     }
 
-    for(let i = 0; i < numRedos && currIndex < records.length; i++) {
-      let record = records.objectAt(currIndex + 1);
+    const changes = this._getChanges('redo', this.get('_meta.currIndex') + 1, numRedos);
 
-      if(isNone(record)) {
-        continue;
-      }
+    this._applyArrayChanges('redo', changes.array);
+    this._applyObjectChanges('redo', changes.object);
 
-      if(record.isArray) {
-        arrayRecords[record.pathString] = arrayRecords[record.pathString] || [];
-        arrayRecords[record.pathString].push(record);
-      } else {
-        let change = {};
-        change[record.fullPath] = record.after;
-        assign(recordsToApply, change);
-      }
-
-      currIndex++;
-    }
-
-    Object.keys(arrayRecords).forEach(path => {
-      const records = arrayRecords[path];
-      const array = content.get(path);
-      let arrayClone = emberArray(array.slice(0));
-
-      records.forEach(record => {
-        if(record.type === 'ADD') {
-          arrayClone.replace(record.key, 0, record.after);
-        } else if(record.type === 'DELETE') {
-          arrayClone.replace(record.key, record.before.length, []);
-        }
-      });
-
-      array.replace(0, array.get('length'), arrayClone);
-    });
-
-    content.setProperties(recordsToApply);
-    this.set('_meta.currIndex', currIndex);
+    this.incrementProperty('_meta.currIndex', changes.total);
   },
 
   undoAll() {
@@ -164,5 +90,79 @@ export default Ember.Mixin.create({
       records.removeObjects(recordsToRemove);
       this.set('_meta.currIndex', records.length - 1);
     }
+  },
+
+  _applyObjectChanges(type, changes) {
+    const content = this.get('content');
+
+    Object.keys(changes).forEach(path => {
+      const record = changes[path];
+      setObject(content, record.fullPath, type === 'undo' ? record.before : record.after);
+    });
+  },
+
+  _applyArrayChanges(type, changes) {
+    const content = this.get('content');
+
+    Object.keys(changes).forEach(path => {
+      const records = changes[path];
+      const array = content.get(path);
+      let arrayClone = emberArray(array.slice(0));
+
+      records.forEach(record => {
+        if(type === 'undo') {
+          this._undoArrayChange(arrayClone, record);
+        } else {
+          this._redoArrayChange(arrayClone, record);
+        }
+      });
+
+      array.replace(0, array.get('length'), arrayClone);
+    });
+  },
+
+  _undoArrayChange(array, record) {
+    if(record.type === 'ADD') {
+      array.replace(record.key, record.after.length, []);
+    } else if(record.type === 'DELETE') {
+      array.replace(record.key, 0, record.before);
+    }
+  },
+
+  _redoArrayChange(array, record) {
+    if(record.type === 'ADD') {
+      array.replace(record.key, 0, record.after);
+    } else if(record.type === 'DELETE') {
+      array.replace(record.key, record.before.length, []);
+    }
+  },
+
+  _getChanges(type, startIndex, numChanges) {
+    const records = this.get('records');
+    const changes = {
+      array: {},
+      object: {},
+      total: 0
+    };
+
+    for(let i = 0; i < numChanges && startIndex > -1 && startIndex < records.length; i++) {
+      let record = records.objectAt(startIndex);
+
+      if(isNone(record)) {
+        continue;
+      }
+
+      if(record.isArray) {
+        changes.array[record.pathString] = changes.array[record.pathString] || [];
+        changes.array[record.pathString].push(record);
+      } else {
+        changes.object[record.fullPath] = record;
+      }
+
+      startIndex += type === 'undo' ? -1 : 1;
+      changes.total++;
+    }
+
+    return changes;
   }
 });
