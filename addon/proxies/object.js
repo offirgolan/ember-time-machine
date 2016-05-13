@@ -10,23 +10,18 @@ const {
 
 const ObjectProxy = Ember.ObjectProxy.extend(RecordKeeperMixin, {
   unknownProperty(key) {
-    const value = this._super(...arguments);
-    return wrapValue(this, key, value);
+    return wrapValue(this, key, this._super(...arguments));
   },
 
   setUnknownProperty(key, value) {
     const records = this.get('records');
     const content = this.get('content');
 
-    if(isNone(records)) {
-      return;
+    if(!isNone(records)) {
+      this._removeRecordsAfterChange();
+      this._addRecord(new Record(this.get('_path'), key, get(content, key), value));
     }
-
-    this._removeRecordsAfterChange();
-
-    records.pushObject(new Record(this.get('_path'), key, get(content, key), value));
-    this.incrementProperty('_meta.currIndex');
-
+    
     return this._super(...arguments);
   }
 });

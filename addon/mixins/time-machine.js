@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import shouldIgnoreRecord from '../utils/should-ignore-record';
 import { setObject } from '../utils/object';
 
 const {
@@ -12,6 +13,7 @@ const {
 
 export default Ember.Mixin.create({
   records: null,
+  ignoredProperties: null,
 
   // Private
   _meta: null,
@@ -30,11 +32,13 @@ export default Ember.Mixin.create({
     this._super(...arguments);
 
     const records = this.get('records');
+    const ignoredProperties = this.get('ignoredProperties');
     const path = this.get('_path');
     const meta = this.get('_meta');
 
     set(this, 'records', isNone(records) ? emberArray() : records);
-    set(this, '_path', isNone(path) ? emberArray() : path);
+    set(this, 'ignoredProperties', isNone(ignoredProperties) ? [] : ignoredProperties);
+    set(this, '_path', isNone(path) ? [] : path);
     set(this, '_meta', isNone(meta) ? { currIndex: -1 } : meta);
   },
 
@@ -43,10 +47,10 @@ export default Ember.Mixin.create({
       return;
     }
 
-    const changes = this._getChanges('undo', this.get('_meta.currIndex'), numUndos);
+    const changes = this._getRecords('undo', this.get('_meta.currIndex'), numUndos);
 
-    this._applyArrayChanges('undo', changes.array);
-    this._applyObjectChanges('undo', changes.object);
+    this._applyArrayRecords('undo', changes.array);
+    this._applyObjectRecords('undo', changes.object);
 
     this.decrementProperty('_meta.currIndex', changes.total);
   },
@@ -56,10 +60,10 @@ export default Ember.Mixin.create({
       return;
     }
 
-    const changes = this._getChanges('redo', this.get('_meta.currIndex') + 1, numRedos);
+    const changes = this._getRecords('redo', this.get('_meta.currIndex') + 1, numRedos);
 
-    this._applyArrayChanges('redo', changes.array);
-    this._applyObjectChanges('redo', changes.object);
+    this._applyArrayRecords('redo', changes.array);
+    this._applyObjectRecords('redo', changes.object);
 
     this.incrementProperty('_meta.currIndex', changes.total);
   },
@@ -97,28 +101,28 @@ export default Ember.Mixin.create({
     }
   },
 
-  _applyObjectChanges(type, changes) {
+  _applyObjectRecords(type, records) {
     const content = this.get('content');
 
-    Object.keys(changes).forEach(path => {
-      const record = changes[path];
+    Object.keys(records).forEach(path => {
+      const record = records[path];
       setObject(content, record.fullPath, type === 'undo' ? record.before : record.after);
     });
   },
 
-  _applyArrayChanges(type, changes) {
+  _applyArrayRecords(type, records) {
     const content = this.get('content');
 
-    Object.keys(changes).forEach(path => {
-      const records = changes[path];
+    Object.keys(records).forEach(path => {
+      const propRecords = records[path];
       const array = content.get(path);
       let arrayClone = emberArray(array.slice(0));
 
-      records.forEach(record => {
+      propRecords.forEach(record => {
         if(type === 'undo') {
-          this._undoArrayChange(arrayClone, record);
+          this._undoArrayRecord(arrayClone, record);
         } else {
-          this._redoArrayChange(arrayClone, record);
+          this._redoArrayRecord(arrayClone, record);
         }
       });
 
@@ -126,7 +130,7 @@ export default Ember.Mixin.create({
     });
   },
 
-  _undoArrayChange(array, record) {
+  _undoArrayRecord(array, record) {
     if(record.type === 'ADD') {
       array.replace(record.key, record.after.length, []);
     } else if(record.type === 'DELETE') {
@@ -134,7 +138,7 @@ export default Ember.Mixin.create({
     }
   },
 
-  _redoArrayChange(array, record) {
+  _redoArrayRecord(array, record) {
     if(record.type === 'ADD') {
       array.replace(record.key, 0, record.after);
     } else if(record.type === 'DELETE') {
@@ -142,15 +146,15 @@ export default Ember.Mixin.create({
     }
   },
 
-  _getChanges(type, startIndex, numChanges) {
+  _getRecords(type, startIndex, numRecords) {
     const records = this.get('records');
-    const changes = {
+    const recordsObj = {
       array: {},
       object: {},
       total: 0
     };
 
-    for(let i = 0; i < numChanges && startIndex > -1 && startIndex < records.length; i++) {
+    for(let i = 0; i < numRecords && startIndex > -1 && startIndex < records.length; i++) {
       let record = records.objectAt(startIndex);
 
       if(isNone(record)) {
@@ -158,16 +162,23 @@ export default Ember.Mixin.create({
       }
 
       if(record.isArray) {
-        changes.array[record.pathString] = changes.array[record.pathString] || [];
-        changes.array[record.pathString].push(record);
+        recordsObj.array[record.pathString] = recordsObj.array[record.pathString] || [];
+        recordsObj.array[record.pathString].push(record);
       } else {
-        changes.object[record.fullPath] = record;
+        recordsObj.object[record.fullPath] = record;
       }
 
       startIndex += type === 'undo' ? -1 : 1;
-      changes.total++;
+      recordsObj.total++;
     }
 
-    return changes;
+    return recordsObj;
+  },
+
+  _addRecord(record) {
+    if(!shouldIgnoreRecord(this.get('ignoredProperties'), record)) {
+      this.get('records').pushObject(record);
+      this.incrementProperty('_meta.currIndex');
+    }
   }
 });

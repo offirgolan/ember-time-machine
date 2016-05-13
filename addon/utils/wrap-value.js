@@ -11,6 +11,7 @@ export default function wrapValue(obj, key, value) {
     return TimeMachine.Array.create({
       content: emberArray(value),
       records: obj.get('records'),
+      ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),
       _meta: obj.get('_meta')
     });
@@ -20,6 +21,7 @@ export default function wrapValue(obj, key, value) {
     return TimeMachine.Object.create({
       content: value,
       records: obj.get('records'),
+      ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),
       _meta: obj.get('_meta')
     });

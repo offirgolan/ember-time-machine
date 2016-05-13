@@ -9,29 +9,23 @@ const {
 
 const ArrayProxy = Ember.ArrayProxy.extend(RecordKeeperMixin, {
   objectAtContent(index) {
-    const value = this._super(...arguments);
-    return wrapValue(this, index, value);
+    return wrapValue(this, index, this._super(...arguments));
   },
 
   replaceContent(startIndex, numRemoved, objects) {
-    console.log(...arguments);
     const records = this.get('records');
     let before, after;
 
-    if(isNone(records)) {
-      return;
+    if(!isNone(records)) {
+      if(numRemoved > 0) {
+        before = this.slice(startIndex, startIndex + numRemoved);
+      } else {
+        after = objects;
+      }
+
+      this._removeRecordsAfterChange();
+      this._addRecord(new Record(this.get('_path'), startIndex, before, after, true));
     }
-
-    this._removeRecordsAfterChange();
-
-    if(numRemoved > 0) {
-      before = this.slice(startIndex, startIndex + numRemoved);
-    } else {
-      after = objects;
-    }
-
-    records.pushObject(new Record(this.get('_path'), startIndex, before, after, true));
-    this.incrementProperty('_meta.currIndex');
 
     return this._super(...arguments);
   }
