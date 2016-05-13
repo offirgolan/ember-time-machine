@@ -64,6 +64,11 @@ export default Ember.Mixin.create({
     this.incrementProperty('_meta.currIndex', changes.total);
   },
 
+  commit() {
+    this.get('records').setObjects([]);
+    this.set('_meta.currIndex', -1);
+  },
+
   undoAll() {
     return this.undo(this.get('_meta.currIndex') + 1);
   },
