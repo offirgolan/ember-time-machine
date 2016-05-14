@@ -1,41 +1,71 @@
-<h1>Object</h1>
+<div class="row">
+	<div class="col s3">
+			{{#md-card}}
+				{{#md-card-content}}
+					<div class="row center-align">
+						<img src={{model.avatar}} alt="" class="circle responsive-img"> <!-- notice the "circle" class -->
+					</div>
+					<div class="row">
+						{{md-input value=model.firstName label='First Name' class="col s12"}}
+						{{md-input value=model.lastName label='Last Name' class="col s12"}}
+						{{md-btn text='Add Message'
+	action='addFriend'
+	class='indigo darken-2'}}
+					</div>
+		    {{/md-card-content}}
+			{{/md-card}}
+	</div>
+	<div class="col s9">
+		<div class="row">
+			{{#sortable-objects sortableObjectList=model.messages enableSort=true}}
+		    {{#each model.messages as |message|}}
+		      {{#draggable-object content=message overrideClass='sortObject' isSortable=true}}
+						{{#md-card class="col s3 offset-s1"}}
+							{{#md-card-content}}
+								<div class="row center-align">
+									<img src={{message.avatar}} alt="" class="circle responsive-img"> <!-- notice the "circle" class -->
+								</div>
+								<div class="row center-align">
+									<p>{{message.fullName}}</p>
+								</div>
+							{{/md-card-content}}
+							{{#md-card-action}}
+								<a>Follow</a>
+							{{/md-card-action}}
+						{{/md-card}}
+		      {{/draggable-object}}
+		    {{/each}}
+		  {{/sortable-objects}}
+		</div>
+	</div>
+</div>
 
-<h2>User</h2>
-{{input value=model.firstName}}
-
-<h2>User.Friend</h2>
-{{input value=model.friend.firstName}}
-
-<h2>User.Friend.Friend</h2>
-{{input value=model.friend.friend.firstName}}
-
-<h1>Array</h1>
-
-<h2>User.Tags</h2>
-<ul>
-  {{#each model.tags as |tag|}}
-    <li>{{input value=tag}} <span><button type="button" name="button" {{action 'removeTag' tag}}>Remove</button></span></li>
-  {{/each}}
-</ul>
-
-<label for="">Add Tag</label>
-{{input value=tag enter=(action 'addTag')}}
 
 
-<h1>DS.Model</h1>
 
-<h2>Model</h2>
-{{input value=model.dsModel.firstName}}
+{{#md-fixed-btns
+	class="fixed-btns-example"
+	btnIcon="fa fa-undo"
+	btnClass="btn-large grey"
+	action="undo"}}
 
-<h2>Model.Friends</h2>
-<ul>
-  {{#each model.dsModel.friends as |friend|}}
-    <li>{{input value=friend.firstName}}</li>
-  {{/each}}
-</ul>
+	{{md-fixed-btn
+		btnClass="indigo"
+		btnIcon="fa fa-floppy-o"
+		action="commit"}}
 
-<h2>Actions</h2>
-<button type="button" name="button" {{action 'undo'}} disabled={{not model.canUndo}}>Undo</button>
-<button type="button" name="button" {{action 'redo'}} disabled={{not model.canRedo}}>Redo</button>
-<button type="button" name="button" {{action 'undoAll'}} disabled={{not model.canUndo}}>Undo All</button>
-<button type="button" name="button" {{action 'redoAll'}} disabled={{not model.canRedo}}>Redo All</button>
+	{{md-fixed-btn
+		btnClass="deep-purple"
+		btnIcon="mdi-content-grade"
+		action="redoAll"}}
+
+	{{md-fixed-btn
+		btnClass="green"
+		btnIcon="fa fa-trash-o"
+		action="undoAll"}}
+
+	{{md-fixed-btn
+		btnClass="green"
+		btnIcon="fa fa-repeat"
+		action="redo"}}
+{{/md-fixed-btns}}

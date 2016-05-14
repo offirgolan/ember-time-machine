@@ -1,6 +1,7 @@
 import Ember from 'ember';
-import shouldIgnoreRecord from '../utils/should-ignore-record';
-import { setObject } from '../utils/object';
+import shouldIgnoreRecord from 'ember-time-machine/utils/should-ignore-record';
+import { setObject } from 'ember-time-machine/utils/object';
+import { unwrapValue } from 'ember-time-machine/utils/wrap-value';
 
 const {
   set,
@@ -18,6 +19,7 @@ export default Ember.Mixin.create({
   // Private
   _meta: null,
   _path: null,
+  __isTimeMachine__: true,
 
   canUndo: computed('records.[]', '_meta.currIndex', function() {
     return !isEmpty(this.get('records')) && this.get('_meta.currIndex') > -1;
@@ -39,7 +41,7 @@ export default Ember.Mixin.create({
     set(this, 'records', isNone(records) ? emberArray() : records);
     set(this, 'ignoredProperties', isNone(ignoredProperties) ? [] : ignoredProperties);
     set(this, '_path', isNone(path) ? [] : path);
-    set(this, '_meta', isNone(meta) ? { currIndex: -1 } : meta);
+    set(this, '_meta', isNone(meta) ? { currIndex: -1, availableMachines: {}, parent: this } : meta);
   },
 
   undo(numUndos = 1) {
@@ -106,7 +108,7 @@ export default Ember.Mixin.create({
 
     Object.keys(records).forEach(path => {
       const record = records[path];
-      setObject(content, record.fullPath, type === 'undo' ? record.before : record.after);
+      setObject(content, record.fullPath, unwrapValue(type === 'undo' ? record.before : record.after));
     });
   },
 
@@ -126,7 +128,7 @@ export default Ember.Mixin.create({
         }
       });
 
-      array.replace(0, array.get('length'), arrayClone);
+      array.replace(0, array.get('length'), unwrapValue(arrayClone));
     });
   },
 

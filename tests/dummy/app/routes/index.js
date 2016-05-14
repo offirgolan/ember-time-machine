@@ -3,18 +3,21 @@ import TimeMachine from 'ember-time-machine';
 
 export default Ember.Route.extend({
   model() {
-    return TimeMachine.Object.create(Ember.getOwner(this).ownerInjection(), {
-      content: Ember.Object.create({
-        friend: Ember.Object.create({
-          friend: Ember.Object.create()
-        }),
-        tags: Ember.A(['foo']),
-        dsModel: this.store.createRecord('user', {
-          friends: [
-            this.store.createRecord('user')
-          ]
-        })
-      })
+    return Ember.RSVP.hash({
+      model: this.store.findRecord('user', 1),
+      users: this.store.findAll('user'),
+      messages: this.store.findAll('message')
+    });
+  },
+
+  setupController(controller, models) {
+    const { model, messages, users } = models;
+
+    model.set('messages', messages);
+
+    controller.setProperties({
+      model: TimeMachine.Object.create({ content: model, ignoredProperties: ['isDraggingObject', 'messages.@each.isDraggingObject'] }),
+      users
     });
   }
 });

@@ -1,13 +1,13 @@
 import Ember from 'ember';
 import RecordKeeperMixin from 'ember-time-machine/mixins/time-machine';
 import Record from 'ember-time-machine/-private/Record';
-import wrapValue from 'ember-time-machine/utils/wrap-value';
+import { wrapValue, unwrapValue } from 'ember-time-machine/utils/wrap-value';
 
 const {
   isNone
 } = Ember;
 
-const ArrayProxy = Ember.ArrayProxy.extend(RecordKeeperMixin, {
+export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
   objectAtContent(index) {
     return wrapValue(this, index, this._super(...arguments));
   },
@@ -27,12 +27,6 @@ const ArrayProxy = Ember.ArrayProxy.extend(RecordKeeperMixin, {
       this._addRecord(new Record(this.get('_path'), startIndex, before, after, true));
     }
 
-    return this._super(...arguments);
+    return this._super(startIndex, numRemoved, unwrapValue(objects));
   }
 });
-
-ArrayProxy.reopenClass({
-  __isTimeMachine__: true
-});
-
-export default ArrayProxy;
