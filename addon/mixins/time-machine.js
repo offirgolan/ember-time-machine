@@ -1,16 +1,18 @@
 import Ember from 'ember';
 import shouldIgnoreRecord from 'ember-time-machine/utils/should-ignore-record';
 import { setObject } from 'ember-time-machine/utils/object';
-import { unwrapValue } from 'ember-time-machine/utils/wrap-value';
 
 const {
-  set,
   isNone,
   isEmpty,
   computed,
   A: emberArray
 } = Ember;
 
+function setIfMissing(obj, key, defaultValue) {
+  const value = obj.get(key);
+  obj.set(key, isNone(value) ? defaultValue : value);
+}
 
 export default Ember.Mixin.create({
   records: null,
@@ -33,15 +35,10 @@ export default Ember.Mixin.create({
   init() {
     this._super(...arguments);
 
-    const records = this.get('records');
-    const ignoredProperties = this.get('ignoredProperties');
-    const path = this.get('_path');
-    const meta = this.get('_meta');
-
-    set(this, 'records', isNone(records) ? emberArray() : records);
-    set(this, 'ignoredProperties', isNone(ignoredProperties) ? [] : ignoredProperties);
-    set(this, '_path', isNone(path) ? [] : path);
-    set(this, '_meta', isNone(meta) ? { currIndex: -1, availableMachines: {}, parent: this } : meta);
+    setIfMissing(this, 'records', emberArray());
+    setIfMissing(this, 'ignoredProperties', emberArray());
+    setIfMissing(this, '_path', []);
+    setIfMissing(this, '_meta',  { currIndex: -1, availableMachines: {}, parent: this });
   },
 
   undo(numUndos = 1) {
@@ -49,12 +46,9 @@ export default Ember.Mixin.create({
       return;
     }
 
-    const changes = this._getRecords('undo', this.get('_meta.currIndex'), numUndos);
-
-    this._applyArrayRecords('undo', changes.array);
-    this._applyObjectRecords('undo', changes.object);
-
-    this.decrementProperty('_meta.currIndex', changes.total);
+    const recordsApplied = this._applyRecords('undo', this.get('_meta.currIndex'), numUndos);
+    this.decrementProperty('_meta.currIndex', recordsApplied.total);
+    return recordsApplied;
   },
 
   redo(numRedos = 1) {
@@ -62,12 +56,9 @@ export default Ember.Mixin.create({
       return;
     }
 
-    const changes = this._getRecords('redo', this.get('_meta.currIndex') + 1, numRedos);
-
-    this._applyArrayRecords('redo', changes.array);
-    this._applyObjectRecords('redo', changes.object);
-
-    this.incrementProperty('_meta.currIndex', changes.total);
+    const recordsApplied = this._applyRecords('redo', this.get('_meta.currIndex') + 1, numRedos);
+    this.incrementProperty('_meta.currIndex', recordsApplied.total);
+    return recordsApplied;
   },
 
   commit() {
@@ -103,35 +94,6 @@ export default Ember.Mixin.create({
     }
   },
 
-  _applyObjectRecords(type, records) {
-    const content = this.get('content');
-
-    Object.keys(records).forEach(path => {
-      const record = records[path];
-      setObject(content, record.fullPath, unwrapValue(type === 'undo' ? record.before : record.after));
-    });
-  },
-
-  _applyArrayRecords(type, records) {
-    const content = this.get('content');
-
-    Object.keys(records).forEach(path => {
-      const propRecords = records[path];
-      const array = content.get(path);
-      let arrayClone = emberArray(array.slice(0));
-
-      propRecords.forEach(record => {
-        if(type === 'undo') {
-          this._undoArrayRecord(arrayClone, record);
-        } else {
-          this._redoArrayRecord(arrayClone, record);
-        }
-      });
-
-      array.replace(0, array.get('length'), unwrapValue(arrayClone));
-    });
-  },
-
   _undoArrayRecord(array, record) {
     if(record.type === 'ADD') {
       array.replace(record.key, record.after.length, []);
@@ -148,13 +110,11 @@ export default Ember.Mixin.create({
     }
   },
 
-  _getRecords(type, startIndex, numRecords) {
+  _applyRecords(type, startIndex, numRecords) {
     const records = this.get('records');
-    const recordsObj = {
-      array: {},
-      object: {},
-      total: 0
-    };
+    const content = this.get('content');
+
+    let recordsApplied = [];
 
     for(let i = 0; i < numRecords && startIndex > -1 && startIndex < records.length; i++) {
       let record = records.objectAt(startIndex);
@@ -164,17 +124,22 @@ export default Ember.Mixin.create({
       }
 
       if(record.isArray) {
-        recordsObj.array[record.pathString] = recordsObj.array[record.pathString] || [];
-        recordsObj.array[record.pathString].push(record);
+        let array = content.get(record.pathString);
+
+        if(type === 'undo') {
+          this._undoArrayRecord(array, record);
+        } else {
+          this._redoArrayRecord(array, record);
+        }
       } else {
-        recordsObj.object[record.fullPath] = record;
+        setObject(content, record.fullPath, type === 'undo' ? record.before : record.after);
       }
 
-      startIndex += type === 'undo' ? -1 : 1;
-      recordsObj.total++;
+      startIndex += (type === 'undo' ? -1 : 1);
+      recordsApplied.push(record);
     }
 
-    return recordsObj;
+    return recordsApplied;
   },
 
   _addRecord(record) {

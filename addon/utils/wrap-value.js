@@ -1,12 +1,24 @@
 import Ember from 'ember';
 import TimeMachine from 'ember-time-machine';
+import { getObject, setObject } from 'ember-time-machine/utils/object';
 
 const {
   get,
   isArray,
-  isNone,
-  A: emberArray
+  isNone
 } = Ember;
+
+function contentAlias(path) {
+  return Ember.computed(`_meta.parent.content.${path}`, {
+    get() {
+      return getObject(this.get('_meta.parent.content'), path);
+    },
+    set(key, value) {
+      setObject(this.get('_meta.parent.content'), path, value);
+      return value;
+    }
+  });
+}
 
 export function wrapValue(obj, key, value) {
   const availableMachines = obj.get('_meta').availableMachines;
@@ -18,8 +30,9 @@ export function wrapValue(obj, key, value) {
   }
 
   if(value && isArray(value) && !get(value, '__isTimeMachine__')) {
-    const machine = TimeMachine.Array.create({
-      content: emberArray(value),
+    const machine = TimeMachine.Array.extend({
+      content: contentAlias(fullPath)
+    }).create({
       records: obj.get('records'),
       ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),
@@ -31,8 +44,9 @@ export function wrapValue(obj, key, value) {
   }
 
   if(value && value instanceof Ember.Object && !get(value, '__isTimeMachine__')) {
-    const machine = TimeMachine.Object.create({
-      content: value,
+    const machine = TimeMachine.Object.extend({
+      content: contentAlias(fullPath)
+    }).create({
       records: obj.get('records'),
       ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),
@@ -51,7 +65,7 @@ export function unwrapValue(value) {
     return value.map(v => get(v, '__isTimeMachine__') ? unwrapValue(get(v, 'content')) : v);
   }
 
-  if(value && value instanceof Ember.Object && get(value, '__isTimeMachine__')) {
+  if(value && (value instanceof Ember.ObjectProxy || get(value, '__isTimeMachine__'))) {
     return unwrapValue(get(value, 'content'));
   }
 

@@ -1,7 +1,7 @@
 import Ember from 'ember';
 import RecordKeeperMixin from 'ember-time-machine/mixins/time-machine';
 import Record from 'ember-time-machine/-private/Record';
-import { wrapValue, unwrapValue } from '../utils/wrap-value';
+import { wrapValue, unwrapValue } from 'ember-time-machine/utils/wrap-value';
 
 const {
   get,
@@ -21,10 +21,6 @@ export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
       this._removeRecordsAfterChange();
       this._addRecord(new Record(this.get('_path'), key, get(content, key), value));
     }
-
-    // if(key === 'messages') {
-    //   console.log('setUnknownProperty', key, value.getEach('id'));
-    // }
 
     return this._super(key, unwrapValue(value));
   }

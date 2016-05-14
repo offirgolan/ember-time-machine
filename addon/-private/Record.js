@@ -1,9 +1,11 @@
+import { unwrapValue } from 'ember-time-machine/utils/wrap-value';
+
 export default class Record {
   constructor(path, key, before, after, isArray = false) {
     this.path = path || [];
     this.key = key;
-    this.before = before;
-    this.after = after;
+    this.before = unwrapValue(before);
+    this.after = unwrapValue(after);
     this.timestamp = (new Date()).toString();
     this.isArray = isArray;
 
