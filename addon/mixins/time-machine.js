@@ -9,7 +9,7 @@ const {
   A: emberArray
 } = Ember;
 
-function setIfMissing(obj, key, defaultValue) {
+function setIfNone(obj, key, defaultValue) {
   const value = obj.get(key);
   obj.set(key, isNone(value) ? defaultValue : value);
 }
@@ -17,6 +17,7 @@ function setIfMissing(obj, key, defaultValue) {
 export default Ember.Mixin.create({
   records: null,
   ignoredProperties: null,
+  inFlight: false,
 
   // Private
   _meta: null,
@@ -34,36 +35,31 @@ export default Ember.Mixin.create({
 
   init() {
     this._super(...arguments);
-
-    setIfMissing(this, 'records', emberArray());
-    setIfMissing(this, 'ignoredProperties', emberArray());
-    setIfMissing(this, '_path', []);
-    setIfMissing(this, '_meta',  { currIndex: -1, availableMachines: {}, parent: this });
+    this._setupMachine();
   },
 
   undo(numUndos = 1) {
-    if(!this.get('canUndo')) {
-      return;
+    let appliedRecords = [];
+
+    if(this.get('canUndo') && !this.get('inFlight')) {
+      this.set('inFlight', true);
+      appliedRecords = this._applyRecords('undo', this.get('_meta.currIndex'), numUndos);
+      this.set('inFlight', false);
     }
 
-    const recordsApplied = this._applyRecords('undo', this.get('_meta.currIndex'), numUndos);
-    this.decrementProperty('_meta.currIndex', recordsApplied.total);
-    return recordsApplied;
+    return appliedRecords;
   },
 
   redo(numRedos = 1) {
-    if(!this.get('canRedo')) {
-      return;
+    let appliedRecords = [];
+
+    if(this.get('canRedo') && !this.get('inFlight')) {
+      this.set('inFlight', true);
+      appliedRecords =  this._applyRecords('redo', this.get('_meta.currIndex') + 1, numRedos);
+      this.set('inFlight', false);
     }
 
-    const recordsApplied = this._applyRecords('redo', this.get('_meta.currIndex') + 1, numRedos);
-    this.incrementProperty('_meta.currIndex', recordsApplied.total);
-    return recordsApplied;
-  },
-
-  commit() {
-    this.get('records').setObjects([]);
-    this.set('_meta.currIndex', -1);
+    return appliedRecords;
   },
 
   undoAll() {
@@ -74,7 +70,19 @@ export default Ember.Mixin.create({
     return this.redo(this.get('records').length - this.get('_meta.currIndex') - 1);
   },
 
-  _removeRecordsAfterChange() {
+  commit() {
+    this.get('records').setObjects([]);
+    this.set('_meta.currIndex', -1);
+  },
+
+  _setupMachine() {
+    setIfNone(this, 'records', emberArray());
+    setIfNone(this, 'ignoredProperties', emberArray());
+    setIfNone(this, '_path', []);
+    setIfNone(this, '_meta',  { currIndex: -1, availableMachines: {}, parent: this });
+  },
+
+  _recalibrate() {
     const records = this.get('records');
     let currIndex = this.get('_meta.currIndex');
 
@@ -139,12 +147,14 @@ export default Ember.Mixin.create({
       recordsApplied.push(record);
     }
 
+    this.incrementProperty('_meta.currIndex', recordsApplied.length * (type === 'undo' ? -1 : 1));
     return recordsApplied;
   },
 
   _addRecord(record) {
     if(!shouldIgnoreRecord(this.get('ignoredProperties'), record)) {
-      this.get('records').pushObject(record);
+      this._recalibrate();
+      this.get('records').pushObject(Object.freeze(record));
       this.incrementProperty('_meta.currIndex');
     }
   }

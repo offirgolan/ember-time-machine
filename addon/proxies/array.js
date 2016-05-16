@@ -23,7 +23,6 @@ export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
         after = objects;
       }
 
-      this._removeRecordsAfterChange();
       this._addRecord(new Record(this.get('_path'), startIndex, before, after, true));
     }
 
