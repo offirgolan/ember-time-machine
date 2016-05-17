@@ -9,7 +9,7 @@ const {
 } = Ember;
 
 export function getObject(obj, key) {
-  const path = key.split('.');
+  const path = key.toString().split('.');
   let o = obj;
 
   for(let i = 0; i < path.length; i++) {

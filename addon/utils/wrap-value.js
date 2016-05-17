@@ -23,15 +23,19 @@ function contentAlias(path) {
 export function wrapValue(obj, key, value) {
   const availableMachines = obj.get('_meta').availableMachines;
   const fullPath = obj.get('_path').concat(key).join('.');
+  // const fullPath = `${Ember.guidFor(obj)}_${key}`;
 
   if(!isNone(availableMachines[fullPath])) {
-    return availableMachines[fullPath];
+    let machine = availableMachines[fullPath];
+    machine.set('content', value);
+    return machine;
   }
 
   if(value && isArray(value) && !get(value, '__isTimeMachine__')) {
     const machine = TimeMachine.Array.extend({
-      content: contentAlias(fullPath)
+      // content: contentAlias(fullPath)
     }).create({
+      content: value,
       records: obj.get('records'),
       ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),
@@ -44,8 +48,9 @@ export function wrapValue(obj, key, value) {
 
   if(value && value instanceof Ember.Object && !get(value, '__isTimeMachine__')) {
     const machine = TimeMachine.Object.extend({
-      content: contentAlias(fullPath)
+      // content: contentAlias(fullPath)
     }).create({
+      content: value,
       records: obj.get('records'),
       ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),

@@ -122,29 +122,46 @@ export default Ember.Mixin.create({
     const records = this.get('records');
 
     let recordsApplied = [];
+    let currIndex = startIndex;
+    let recordCount = 0;
+    let direction = (type === 'undo' ? -1 : 1);
+    let record, nextRecord;
 
-    for(let i = 0; i < numRecords && startIndex > -1 && startIndex < records.length; i++) {
-      let record = records.objectAt(startIndex);
+    for(let i = 0; i < numRecords && currIndex > -1 && currIndex < records.length; i++) {
+      record = records.objectAt(currIndex);
+      nextRecord = records.objectAt(currIndex + direction);
 
       if(isNone(record)) {
         continue;
       }
 
+      /*
+        Array operations must be done one a time since it will be
+        more expensive to clone the array, do the operations on the clone, then
+        apply the updated cloned array on the target.
+       */
       if(record.isArray) {
         if(type === 'undo') {
           this._undoArrayRecord(record.target, record);
         } else {
           this._redoArrayRecord(record.target, record);
         }
-      } else {
+        recordsApplied.push(record);
+      } else if(!nextRecord || record.fullPath !== nextRecord.fullPath) {
+        /*
+          Apply the last object property change that occured in a row.
+          ex) If firstName changed 5 times in a row and we undo, then apply only
+              the first of the five records. Redo will be the last of the five.
+         */
         setObject(record.target, record.key, type === 'undo' ? record.before : record.after);
+        recordsApplied.push(record);
       }
 
-      startIndex += (type === 'undo' ? -1 : 1);
-      recordsApplied.push(record);
+      currIndex += direction;
+      recordCount++;
     }
 
-    this.incrementProperty('_meta.currIndex', recordsApplied.length * (type === 'undo' ? -1 : 1));
+    this.incrementProperty('_meta.currIndex', recordCount * direction);
     return recordsApplied;
   },
 
