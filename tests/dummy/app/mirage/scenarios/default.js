@@ -4,7 +4,7 @@ export default function(server) {
   // data will not be loaded in your tests.
 
   server.createList('user', 20);
-  server.createList('message', getRandomInt(3, 11));
+  server.createList('task', getRandomInt(10, 20));
 }
 
 /**

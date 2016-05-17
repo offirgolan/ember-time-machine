@@ -1,10 +1,28 @@
 // Fix for Roboto font path
 $roboto-font-path: '../assets/';
 
-// Materialize styles
+// Example app.scss
+@import 'components/color';
+
+// Custom color settings go here
+$primary-color: color("deep-orange", "lighten-1");
+$secondary-color: color("teal", "lighten-1");
+
+
+@import 'components/variables';
 @import "materialize";
-
-// ember-cli-materialize styles
 @import 'ember-cli-materialize';
-
 @import "font-awesome";
+
+html, body {
+  height: 100%;
+  background-color: color("grey", "lighten-2");
+}
+
+a {
+  cursor: pointer;
+}
+
+.collection {
+  border: none;
+}

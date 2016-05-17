@@ -1,5 +1,6 @@
-<div class="row">
-	<div class="col s3">
+<div class="container">
+	<div class="row">
+		<div class="col s4">
 			{{#md-card}}
 				{{#md-card-content}}
 					<div class="row center-align">
@@ -8,39 +9,83 @@
 					<div class="row">
 						{{md-input value=model.firstName label='First Name' class="col s12"}}
 						{{md-input value=model.lastName label='Last Name' class="col s12"}}
-						{{md-btn text='Add Message'
-	action='addFriend'
-	class='indigo darken-2'}}
 					</div>
 		    {{/md-card-content}}
 			{{/md-card}}
-	</div>
-	<div class="col s9">
-		<div class="row">
-			{{#sortable-objects sortableObjectList=model.messages enableSort=true}}
-		    {{#each model.messages as |message|}}
-		      {{#draggable-object content=message overrideClass='sortObject' isSortable=true}}
-						{{#md-card class="col s3 offset-s1"}}
-							{{#md-card-content}}
-								<div class="row center-align">
-									<img src={{message.avatar}} alt="" class="circle responsive-img"> <!-- notice the "circle" class -->
-								</div>
-								<div class="row center-align">
-									<p>{{message.fullName}}</p>
-								</div>
-							{{/md-card-content}}
-							{{#md-card-action}}
-								<a>Follow</a>
-							{{/md-card-action}}
-						{{/md-card}}
-		      {{/draggable-object}}
-		    {{/each}}
-		  {{/sortable-objects}}
+
+			{{#md-card title="Settings"}}
+				{{#md-card-content}}
+					<div class="row">
+						<div class="col s12">
+							<br>
+							<p>{{md-switch checked=model.settings.newTasks name="New Tasks"}}</p>
+							<br>
+							<p>{{md-switch checked=model.settings.newOnTop name="New On Top"}}</p>
+							<br>
+							<p>{{md-switch checked=model.settings.showTabs name="Show Tabs"}}</p>
+						</div>
+					</div>
+		    {{/md-card-content}}
+			{{/md-card}}
+		</div>
+		<div class="col s8">
+			{{#if model.settings.newTasks}}
+				{{#md-card}}
+					{{#md-card-content}}
+						<div class="row">
+							<div class="col s1">
+								<span class="fa fa-pencil"></span>
+							</div>
+							<div class="col s11">
+									{{input value=newTask placeholder="What needs to be done?" enter=(action 'addTask')}}
+							</div>
+						</div>
+					{{/md-card-content}}
+				{{/md-card}}
+			{{/if}}
+
+			{{#md-card}}
+			    {{#md-card-content}}
+						{{#if model.settings.showTabs}}
+							{{#md-tabs selected=filter}}
+								{{md-tab value='all' title="All"}}
+								{{md-tab value='active' title="Active"}}
+								{{md-tab value='completed' title="Completed"}}
+							{{/md-tabs}}
+						{{/if}}
+
+						{{#md-collection content=tasks as |task|}}
+							<div class="collection-item">
+								{{#if task.isEditing}}
+									{{input value=task.text enter=(action (toggle 'isEditing' task))}}
+								{{else}}
+									{{md-check checked=(mut task.isCompleted) class="pull-left"}}
+									<span {{action (toggle 'isEditing' task) on="doubleClick"}}>{{task.text}}</span>
+								{{/if}}
+							</div>
+						{{/md-collection}}
+			    {{/md-card-content}}
+			{{/md-card}}
 		</div>
 	</div>
 </div>
-
-
+{{!--
+<div class="row">
+	{{#sortable-objects sortableObjectList=model.tasks enableSort=true}}
+    {{#each model.tasks as |task|}}
+      {{#draggable-object content=task overrideClass='sortObject' isSortable=true}}
+				{{#md-card class="col s3 offset-s1"}}
+					{{#md-card-content}}
+						{{task.text}}
+					{{/md-card-content}}
+					{{#md-card-action}}
+						{{md-check checked=task.isCompleted}}
+					{{/md-card-action}}
+				{{/md-card}}
+      {{/draggable-object}}
+    {{/each}}
+  {{/sortable-objects}}
+</div> --}}
 
 
 {{#md-fixed-btns
@@ -56,12 +101,12 @@
 
 	{{md-fixed-btn
 		btnClass="deep-purple"
-		btnIcon="mdi-content-grade"
+		btnIcon="fa fa-repeat all"
 		action="redoAll"}}
 
 	{{md-fixed-btn
 		btnClass="green"
-		btnIcon="fa fa-trash-o"
+		btnIcon="fa fa-undo all"
 		action="undoAll"}}
 
 	{{md-fixed-btn

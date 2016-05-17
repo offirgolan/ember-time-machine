@@ -23,7 +23,7 @@ export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
         after = objects;
       }
 
-      this._addRecord(new Record(this.get('_path'), startIndex, before, after, true));
+      this._addRecord(new Record(this.get('content'), this.get('_path'), startIndex, before, after, true));
     }
 
     return this._super(startIndex, numRemoved, unwrapValue(objects));

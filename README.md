@@ -3,24 +3,11 @@
 This README outlines the details of collaborating on this Ember addon.
 
 ## Installation
+```shell
+ember install ember-time-machine
+```
 
-* `git clone` this repository
-* `npm install`
-* `bower install`
+## Looking for help?
+If it is a bug [please open an issue on GitHub](http://github.com/offirgolan/ember-time-machine/issues).
 
-## Running
-
-* `ember server`
-* Visit your app at http://localhost:4200.
-
-## Running Tests
-
-* `npm test` (Runs `ember try:testall` to test your addon against multiple Ember versions)
-* `ember test`
-* `ember test --server`
-
-## Building
-
-* `ember build`
-
-For more information on using ember-cli, visit [http://ember-cli.com/](http://ember-cli.com/).
+## Usage

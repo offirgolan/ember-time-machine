@@ -79,7 +79,7 @@ export default Ember.Mixin.create({
     setIfNone(this, 'records', emberArray());
     setIfNone(this, 'ignoredProperties', emberArray());
     setIfNone(this, '_path', []);
-    setIfNone(this, '_meta',  { currIndex: -1, availableMachines: {}, parent: this });
+    setIfNone(this, '_meta',  { currIndex: -1, availableMachines: {}, rootMachine: this });
   },
 
   _recalibrate() {
@@ -120,7 +120,6 @@ export default Ember.Mixin.create({
 
   _applyRecords(type, startIndex, numRecords) {
     const records = this.get('records');
-    const content = this.get('content');
 
     let recordsApplied = [];
 
@@ -132,15 +131,13 @@ export default Ember.Mixin.create({
       }
 
       if(record.isArray) {
-        let array = content.get(record.pathString);
-
         if(type === 'undo') {
-          this._undoArrayRecord(array, record);
+          this._undoArrayRecord(record.target, record);
         } else {
-          this._redoArrayRecord(array, record);
+          this._redoArrayRecord(record.target, record);
         }
       } else {
-        setObject(content, record.fullPath, type === 'undo' ? record.before : record.after);
+        setObject(record.target, record.key, type === 'undo' ? record.before : record.after);
       }
 
       startIndex += (type === 'undo' ? -1 : 1);

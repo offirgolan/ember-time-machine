@@ -16,10 +16,9 @@ export default DS.Model.extend({
   avatar: attr('string'),
   bio: attr('string'),
 
-  friends: DS.hasMany('user'),
-  messages: DS.hasMany('message'),
+  settings: DS.belongsTo('setting'),
+  tasks: DS.hasMany('task'),
 
-  fullName: computed('firstName', 'lastName', function() {
-    return `${this.get('firstName')} ${this.get('lastName')}`;
-  })
+  activeTasks: computed.filterBy('tasks', 'isCompleted', false),
+  completedTasks: computed.filterBy('tasks', 'isCompleted', true)
 });

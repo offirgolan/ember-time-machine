@@ -1,8 +1,9 @@
 import { unwrapValue } from 'ember-time-machine/utils/wrap-value';
 
 export default class Record {
-  constructor(path, key, before, after, isArray = false) {
-    this.path = path || [];
+  constructor(target, path , key, before, after, isArray = false) {
+    this.target = target;
+    this.path = path;
     this.key = key;
     this.before = unwrapValue(before);
     this.after = unwrapValue(after);
@@ -18,7 +19,7 @@ export default class Record {
     }
   }
 
-  get pathString() {
+  get pathToKey() {
     return this.path.join('.');
   }
 

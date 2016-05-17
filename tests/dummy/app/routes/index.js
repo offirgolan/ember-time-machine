@@ -5,19 +5,19 @@ export default Ember.Route.extend({
   model() {
     return Ember.RSVP.hash({
       model: this.store.findRecord('user', 1),
-      users: this.store.findAll('user'),
-      messages: this.store.findAll('message')
+      tasks: this.store.findAll('task')
     });
   },
 
   setupController(controller, models) {
-    const { model, messages, users } = models;
+    const { model, tasks } = models;
 
-    model.set('messages', messages);
+    model.set('tasks', tasks);
+    model.set('settings', this.store.createRecord('setting'));
 
-    controller.setProperties({
-      model: TimeMachine.Object.create({ content: model, ignoredProperties: ['isDraggingObject', 'messages.@each.isDraggingObject'] }),
-      users
-    });
+    controller.set('model', TimeMachine.Object.create({
+      content: model,
+      ignoredProperties: ['tasks.@each.isDraggingObject', 'tasks.@each.isEditing']
+    }));
   }
 });

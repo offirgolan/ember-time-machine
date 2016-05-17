@@ -44,6 +44,7 @@ export default function() {
   this.get('/users/:id');
 
   this.get('/messages');
+  this.get('/tasks');
 
   /*
     Route shorthand cheatsheet

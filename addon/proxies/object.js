@@ -18,7 +18,7 @@ export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
     const content = this.get('content');
 
     if(!isNone(records)) {
-      this._addRecord(new Record(this.get('_path'), key, get(content, key), value));
+      this._addRecord(new Record(content, this.get('_path'), key, get(content, key), value, false));
     }
 
     return this._super(key, unwrapValue(value));

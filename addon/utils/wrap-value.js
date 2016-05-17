@@ -9,12 +9,12 @@ const {
 } = Ember;
 
 function contentAlias(path) {
-  return Ember.computed(`_meta.parent.content.${path}`, {
+  return Ember.computed(`_meta.rootMachine.content.${path}`, {
     get() {
-      return getObject(this.get('_meta.parent.content'), path);
+      return getObject(this.get('_meta.rootMachine.content'), path);
     },
     set(key, value) {
-      setObject(this.get('_meta.parent.content'), path, value);
+      setObject(this.get('_meta.rootMachine.content'), path, value);
       return value;
     }
   });
@@ -23,7 +23,6 @@ function contentAlias(path) {
 export function wrapValue(obj, key, value) {
   const availableMachines = obj.get('_meta').availableMachines;
   const fullPath = obj.get('_path').concat(key).join('.');
-
 
   if(!isNone(availableMachines[fullPath])) {
     return availableMachines[fullPath];
