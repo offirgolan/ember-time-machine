@@ -127,9 +127,10 @@ export default Ember.Mixin.create({
     let direction = (type === 'undo' ? -1 : 1);
     let record, nextRecord;
 
-    for(let i = 0; i < numRecords && currIndex > -1 && currIndex < records.length; i++) {
+    for(let i = 0; i < numRecords && currIndex > -1 && currIndex < records.length; i++, currIndex += direction) {
       record = records.objectAt(currIndex);
       nextRecord = records.objectAt(currIndex + direction);
+      let isLast = !isNone(nextRecord) || i === numRecords - 1;
 
       if(isNone(record)) {
         continue;
@@ -147,7 +148,7 @@ export default Ember.Mixin.create({
           this._redoArrayRecord(record.target, record);
         }
         recordsApplied.push(record);
-      } else if(!nextRecord || record.fullPath !== nextRecord.fullPath) {
+      } else if(isLast || record.fullPath !== nextRecord.fullPath) {
         /*
           Apply the last object property change that occured in a row.
           ex) If firstName changed 5 times in a row and we undo, then apply only
@@ -157,7 +158,6 @@ export default Ember.Mixin.create({
         recordsApplied.push(record);
       }
 
-      currIndex += direction;
       recordCount++;
     }
 
