@@ -1,6 +1,5 @@
 import Ember from 'ember';
 import TimeMachine from 'ember-time-machine';
-import { getObject, setObject } from 'ember-time-machine/utils/object';
 
 const {
   get,
@@ -8,33 +7,17 @@ const {
   isNone
 } = Ember;
 
-function contentAlias(path) {
-  return Ember.computed(`_meta.rootMachine.content.${path}`, {
-    get() {
-      return getObject(this.get('_meta.rootMachine.content'), path);
-    },
-    set(key, value) {
-      setObject(this.get('_meta.rootMachine.content'), path, value);
-      return value;
-    }
-  });
-}
-
 export function wrapValue(obj, key, value) {
   const availableMachines = obj.get('_meta').availableMachines;
-  const fullPath = obj.get('_path').concat(key).join('.');
-  // const fullPath = `${Ember.guidFor(obj)}_${key}`;
+  const guid = Ember.guidFor(value);
+  let machine;
 
-  if(!isNone(availableMachines[fullPath])) {
-    let machine = availableMachines[fullPath];
-    machine.set('content', value);
-    return machine;
+  if(!isNone(availableMachines[guid])) {
+    return availableMachines[guid];
   }
 
   if(value && isArray(value) && !get(value, '__isTimeMachine__')) {
-    const machine = TimeMachine.Array.extend({
-      // content: contentAlias(fullPath)
-    }).create({
+    machine = TimeMachine.Array.create({
       content: value,
       records: obj.get('records'),
       ignoredProperties: obj.get('ignoredProperties'),
@@ -42,14 +25,12 @@ export function wrapValue(obj, key, value) {
       _meta: obj.get('_meta')
     });
 
-    availableMachines[fullPath] = machine;
+    availableMachines[guid] = machine;
     return machine;
   }
 
   if(value && value instanceof Ember.Object && !get(value, '__isTimeMachine__')) {
-    const machine = TimeMachine.Object.extend({
-      // content: contentAlias(fullPath)
-    }).create({
+    machine = TimeMachine.Object.create({
       content: value,
       records: obj.get('records'),
       ignoredProperties: obj.get('ignoredProperties'),
@@ -57,7 +38,7 @@ export function wrapValue(obj, key, value) {
       _meta: obj.get('_meta')
     });
 
-    availableMachines[fullPath] = machine;
+    availableMachines[guid] = machine;
     return machine;
   }
 

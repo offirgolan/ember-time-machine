@@ -19,5 +19,7 @@ export default Ember.Route.extend({
       content: model,
       ignoredProperties: ['tasks.@each.isDraggingObject', 'tasks.@each.isEditing']
     }));
+
+    // controller.set('model', model);
   }
 });

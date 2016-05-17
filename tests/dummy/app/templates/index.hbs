@@ -1,4 +1,4 @@
-{{!-- <div class="container">
+<div class="container">
 	<div class="row">
 		<div class="col s4">
 			{{#md-card}}
@@ -68,13 +68,13 @@
 			{{/md-card}}
 		</div>
 	</div>
-</div> --}}
+</div>
 
-{{!-- <div class="row">
+<div class="row">
 	{{#sortable-objects sortableObjectList=model.tasks enableSort=true}}
     {{#each model.tasks as |task|}}
       {{#draggable-object content=task overrideClass='sortObject' isSortable=true}}
-				{{#md-card class="col s3 offset-s1"}}
+				{{#md-card class="col s3"}}
 					{{#md-card-content}}
 						{{task.text}}
 					{{/md-card-content}}
@@ -85,9 +85,9 @@
       {{/draggable-object}}
     {{/each}}
   {{/sortable-objects}}
-</div> --}}
+</div>
 
-<div class="row">
+{{!-- <div class="row">
 	<div class="col s6">
 		{{#each model.activeTasks as |task|}}
 				{{#md-card class="col s3 offset-s1"}}
@@ -112,7 +112,7 @@
 				{{/md-card}}
     {{/each}}
 	</div>
-</div>
+</div> --}}
 
 {{#md-fixed-btns
 	class="fixed-btns-example"
