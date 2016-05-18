@@ -2,16 +2,20 @@
 	<div class="row"></div>
 	<div class="row">
 		<div class="col s4">
-			{{#md-card}}
+			{{#md-card title=model.displayName image=model.avatar activator=true class="user-card"}}
 				{{#md-card-content}}
-					<div class="row center-align">
+					{{!-- <div class="row center-align">
 						<img src={{model.avatar}} alt="" width="200px" class="circle deep-orange lighten-2 responsive-img"> <!-- notice the "circle" class -->
-					</div>
+					</div> --}}
+		    {{/md-card-content}}
+
+				{{#md-card-reveal}}
 					<div class="row">
-						{{md-input value=model.firstName label='First Name' class="col s12" validate=false}}
+						{{md-input value=model.username label='Username' class="col s12"}}
+						{{md-input value=model.firstName label='First Name' class="col s12"}}
 						{{md-input value=model.lastName label='Last Name' class="col s12"}}
 					</div>
-		    {{/md-card-content}}
+    		{{/md-card-reveal}}
 			{{/md-card}}
 
 			{{#md-card title="Settings"}}
@@ -24,6 +28,8 @@
 							<p>{{md-switch checked=model.settings.newOnTop name="New On Top"}}</p>
 							<br>
 							<p>{{md-switch checked=model.settings.showTabs name="Show Tabs"}}</p>
+							<br>
+							<p>{{md-switch checked=model.settings.sortableCards name="Use Sortable Cards"}}</p>
 						</div>
 					</div>
 		    {{/md-card-content}}
@@ -45,84 +51,59 @@
 				{{/md-card}}
 			{{/if}}
 
-			{{#md-card}}
-			    {{#md-card-content}}
-						{{#if model.settings.showTabs}}
-							{{#md-tabs selected=tasksArray}}
-								{{md-tab value='tasks' title="All"}}
-								{{md-tab value='activeTasks' title="Active"}}
-								{{md-tab value='completedTasks' title="Completed"}}
-							{{/md-tabs}}
-						{{/if}}
+			{{#if model.settings.sortableCards}}
+				<div class="task-cards-container">
+					{{#sortable-objects sortableObjectList=model.tasks enableSort=true class="row"}}
+						{{#each model.tasks as |task|}}
+							{{#draggable-object content=task overrideClass='taskCard' isSortable=true}}
+								{{#md-card}}
+									{{#md-card-content}}
+										{{task.title}}
+									{{/md-card-content}}
+									{{#md-card-action}}
+										{{md-check checked=task.isCompleted}}
+									{{/md-card-action}}
+								{{/md-card}}
+							{{/draggable-object}}
+						{{/each}}
+					{{/sortable-objects}}
+				</div>
+			{{else}}
+				{{#md-card}}
+				    {{#md-card-content}}
+							{{#if model.settings.showTabs}}
+								{{#md-tabs selected=tasksArray}}
+									{{md-tab value='tasks' title="All"}}
+									{{md-tab value='activeTasks' title="Active"}}
+									{{md-tab value='completedTasks' title="Completed"}}
+								{{/md-tabs}}
+							{{/if}}
 
-						{{#md-collection content=(get model tasksArray) class="task-list" as |task|}}
-							<div class="collection-item task-item">
-								{{#if task.isEditing}}
-									{{input value=task.title enter=(action (toggle 'isEditing' task)) focusOut=(action (toggle 'isEditing' task))}}
-								{{else}}
-									<div class="row">
-										<div class="col s1">
-											{{md-check checked=(mut task.isCompleted)}}
+							{{#md-collection content=(get model tasksArray) class="task-list" as |task|}}
+								<div class="collection-item task-item">
+									{{#if task.isEditing}}
+										{{input value=task.title enter=(action (toggle 'isEditing' task)) focusOut=(action (toggle 'isEditing' task))}}
+									{{else}}
+										<div class="row">
+											<div class="col s1">
+												{{md-check checked=(mut task.isCompleted)}}
+											</div>
+											<div class="title col s10" {{action (toggle 'isEditing' task) on="doubleClick"}}>
+												{{task.title}}
+											</div>
+											<div class="remove-task col s1 right-align">
+												<a class="fa fa-trash-o deep-orange-text" {{action 'removeTask' task}}></a>
+											</div>
 										</div>
-										<div class="title col s10" {{action (toggle 'isEditing' task) on="doubleClick"}}>
-											{{task.title}}
-										</div>
-										<div class="remove-task col s1 right-align">
-											<a class="fa fa-trash-o deep-orange-text" {{action 'removeTask' task}}></a>
-										</div>
-									</div>
-								{{/if}}
-							</div>
-						{{/md-collection}}
-			    {{/md-card-content}}
-			{{/md-card}}
+									{{/if}}
+								</div>
+							{{/md-collection}}
+				    {{/md-card-content}}
+				{{/md-card}}
+			{{/if}}
 		</div>
 	</div>
 </div>
-
-<div class="row">
-	{{#sortable-objects sortableObjectList=model.tasks enableSort=true}}
-    {{#each model.tasks as |task|}}
-      {{#draggable-object content=task overrideClass='sortObject' isSortable=true}}
-				{{#md-card class="col s3"}}
-					{{#md-card-content}}
-						{{task.title}}
-					{{/md-card-content}}
-					{{#md-card-action}}
-						{{md-check checked=task.isCompleted}}
-					{{/md-card-action}}
-				{{/md-card}}
-      {{/draggable-object}}
-    {{/each}}
-  {{/sortable-objects}}
-</div>
-
-{{!-- <div class="row">
-	<div class="col s6">
-		{{#each model.activeTasks as |task|}}
-				{{#md-card class="col s3 offset-s1"}}
-					{{#md-card-content}}
-						{{task.text}}
-					{{/md-card-content}}
-					{{#md-card-action}}
-						{{md-check checked=task.isCompleted}}
-					{{/md-card-action}}
-				{{/md-card}}
-    {{/each}}
-	</div>
-	<div class="col s6">
-		{{#each model.completedTasks as |task|}}
-				{{#md-card class="col s3 offset-s1"}}
-					{{#md-card-content}}
-						{{task.text}}
-					{{/md-card-content}}
-					{{#md-card-action}}
-						{{md-check checked=task.isCompleted}}
-					{{/md-card-action}}
-				{{/md-card}}
-    {{/each}}
-	</div>
-</div> --}}
 
 {{#md-fixed-btns
 	class="fixed-btns"

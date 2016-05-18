@@ -6,8 +6,9 @@ export default Ember.Route.extend({
     return Ember.RSVP.hash({
       model: this.store.createRecord('user', {
         avatar: 'images/tomster.png',
+        username: 'Tomster',
         firstName: 'Tom',
-        lastName: 'Ster'
+        lastName: 'Hamster'
       }),
       tasks: this.store.findAll('task')
     });

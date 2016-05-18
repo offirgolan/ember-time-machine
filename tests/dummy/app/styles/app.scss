@@ -7,9 +7,10 @@ $roboto-font-path: '../assets/';
 // Custom color settings go here
 $primary-color: color("blue-grey", "darken-1");
 $secondary-color: color("deep-orange", "lighten-1");
-$success-color: $primary-color;
+$success-color: $secondary-color;
 
 @import 'components/variables';
+@import 'components/global';
 @import "materialize";
 @import 'ember-cli-materialize';
 @import "font-awesome";
@@ -21,6 +22,35 @@ html, body {
 
 a {
   cursor: pointer;
+}
+
+nav .brand-logo {
+  white-space: nowrap;
+  padding-left: 20px;
+
+  .ember-logo {
+    height: 50px;
+    padding-top: 8px;
+  }
+
+  > span {
+    font-size: 22px;
+    vertical-align: top;
+  }
+}
+
+.user-card {
+  .card-image {
+    @extend .center-align;
+
+    img {
+      @extend .deep-orange;
+      @extend .lighten-2;
+      width: 200px;
+      margin: 15px auto 0 auto;
+      border-radius: 50%;
+   }
+  }
 }
 
 .collection.task-list {
@@ -52,6 +82,27 @@ a {
       margin-top: 30px;
       font-size: 36px;
       font-weight: 200;
+    }
+  }
+}
+
+.task-cards-container {
+  text-align: center;
+
+  .taskCard {
+    display: inline-block;
+    width: 25%;
+    margin: 20px;
+
+    .card {
+      height: 250px;
+      width: 100%;
+      text-align: left;
+
+      .card-content {
+        height: 175px;
+        overflow: auto;
+      }
     }
   }
 }

@@ -1,7 +1,26 @@
-{{#md-navbar name='Ember Time Machine'}}
-  <!-- A workaround to get the "active" class
-    to apply to the active <li> automatically -->
-{{/md-navbar}}
+<nav>
+  <div class="nav-wrapper">
+    <div class="container-fluid">
+      {{#link-to "index" class="brand-logo white-text"}}
+        <img class="ember-logo hide-on-med-and-down" src="images/ember-logo.svg" alt="" />
+        <span>Time Machine</span>
+      {{/link-to}}
+      <ul class="right hide-on-med-and-down">
+        {{!-- {{#link-to "navbar" tagName="li"}}
+         {{link-to "Navbar" "navbar"}}
+        {{/link-to}} --}}
+      </ul>
+    </div>
+
+    <a class="button-collapse" data-activates="sidenav">
+      <i class="fa fa-menu"></i>
+    </a>
+  </div>
+
+  <ul id="sidenav" class="side-nav">
+    {{yield}}
+  </ul>
+</nav>
 
 {{outlet}}
 
