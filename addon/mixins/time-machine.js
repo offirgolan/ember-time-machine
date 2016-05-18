@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import shouldIgnoreRecord from 'ember-time-machine/utils/should-ignore-record';
+import MachineStates from 'ember-time-machine/-private/machine-states';
 import { setObject } from 'ember-time-machine/utils/object';
 
 const {
@@ -9,28 +10,29 @@ const {
   A: emberArray
 } = Ember;
 
-function setIfNone(obj, key, defaultValue) {
-  const value = obj.get(key);
-  obj.set(key, isNone(value) ? defaultValue : value);
-}
-
 export default Ember.Mixin.create({
-  records: null,
   ignoredProperties: null,
   inFlight: false,
 
   // Private
-  _meta: null,
   _path: null,
+  _rootMachine: null,
   __isTimeMachine__: true,
 
-  canUndo: computed('records.[]', '_meta.currIndex', function() {
-    return !isEmpty(this.get('records')) && this.get('_meta.currIndex') > -1;
+  _rootMachineState: computed('_rootMachine', function() {
+      return MachineStates.get(this.get('_rootMachine'));
+  }).readOnly(),
+
+  canUndo: computed('_rootMachineState.records.[]', '_rootMachineState.currIndex', function() {
+    const state = this.get('_rootMachineState');
+    return !isEmpty(state.get('records')) && state.get('currIndex') > - 1;
   }),
 
-  canRedo: computed('records.[]', '_meta.currIndex', function() {
-    const records = this.get('records');
-    return !isEmpty(records) && this.get('_meta.currIndex') < records.length - 1;
+  canRedo: computed('_rootMachineState.records.[]', '_rootMachineState.currIndex', function() {
+    const state = this.get('_rootMachineState');
+    const records = state.get('records');
+
+    return !isEmpty(records) && state.get('currIndex') < records.length - 1;
   }),
 
   init() {
@@ -39,11 +41,12 @@ export default Ember.Mixin.create({
   },
 
   undo(numUndos = 1) {
+    const state = this.get('_rootMachineState');
     let appliedRecords = [];
 
     if(this.get('canUndo') && !this.get('inFlight')) {
       this.set('inFlight', true);
-      appliedRecords = this._applyRecords('undo', this.get('_meta.currIndex'), numUndos);
+      appliedRecords = this._applyRecords('undo', state.get('currIndex'), numUndos);
       this.set('inFlight', false);
     }
 
@@ -51,11 +54,12 @@ export default Ember.Mixin.create({
   },
 
   redo(numRedos = 1) {
+    const state = this.get('_rootMachineState');
     let appliedRecords = [];
 
     if(this.get('canRedo') && !this.get('inFlight')) {
       this.set('inFlight', true);
-      appliedRecords =  this._applyRecords('redo', this.get('_meta.currIndex') + 1, numRedos);
+      appliedRecords =  this._applyRecords('redo', state.get('currIndex') + 1, numRedos);
       this.set('inFlight', false);
     }
 
@@ -63,32 +67,58 @@ export default Ember.Mixin.create({
   },
 
   undoAll() {
-    return this.undo(this.get('_meta.currIndex') + 1);
+    const state = this.get('_rootMachineState');
+    return this.undo(state.get('currIndex') + 1);
   },
 
   redoAll() {
-    return this.redo(this.get('records').length - this.get('_meta.currIndex') - 1);
+    const state = this.get('_rootMachineState');
+    return this.redo(state.get('records.length') - state.get('currIndex') - 1);
   },
 
   commit() {
-    this.get('records').setObjects([]);
-    this.set('_meta.currIndex', -1);
+    const state = this.get('_rootMachineState');
+    state.get('records').setObjects([]);
+    state.set('currIndex', -1);
+  },
+
+  destroy() {
+    this._super(...arguments);
+
+    const content = this.get('content');
+    const rootMachine = this.get('_rootMachine');
+    const availableMachines = this.get('_rootMachineState').availableMachines;
+
+    if(availableMachines.has(content)) {
+      availableMachines.delete(content);
+    }
+
+    if(rootMachine === this) {
+      MachineStates.delete(this);
+    }
   },
 
   _setupMachine() {
-    setIfNone(this, 'records', emberArray());
-    setIfNone(this, 'ignoredProperties', emberArray());
-    setIfNone(this, '_path', []);
-    setIfNone(this, '_meta',  { currIndex: -1, availableMachines: {}, rootMachine: this });
+    if(isNone(this.get('_rootMachine')) && !MachineStates.has(this)) {
+      let availableMachines = new WeakMap();
+      let ignoredProperties = this.get('ignoredProperties');
+
+      availableMachines.set(this.get('content'), this);
+      MachineStates.set(this, Ember.Object.create({
+        currIndex: -1,
+        records: emberArray(),
+        ignoredProperties: isNone(ignoredProperties) ? emberArray() : ignoredProperties,
+        availableMachines
+      }));
+      this.set('_rootMachine', this);
+      this.set('_path', emberArray());
+    }
   },
 
   _recalibrate() {
-    const records = this.get('records');
-    let currIndex = this.get('_meta.currIndex');
-
-    if(isNone(records)) {
-      return;
-    }
+    const state = this.get('_rootMachineState');
+    const records = state.get('records');
+    let currIndex = state.get('currIndex');
 
     if(currIndex !== records.length - 1) {
       const recordsToRemove = [];
@@ -98,7 +128,7 @@ export default Ember.Mixin.create({
         recordsToRemove.push(records[currIndex]);
       }
       records.removeObjects(recordsToRemove);
-      this.set('_meta.currIndex', records.length - 1);
+      state.set('currIndex', records.length - 1);
     }
   },
 
@@ -119,7 +149,8 @@ export default Ember.Mixin.create({
   },
 
   _applyRecords(type, startIndex, numRecords) {
-    const records = this.get('records');
+    const state = this.get('_rootMachineState');
+    const records = state.get('records');
 
     let recordsApplied = [];
     let currIndex = startIndex;
@@ -161,15 +192,17 @@ export default Ember.Mixin.create({
       recordCount++;
     }
 
-    this.incrementProperty('_meta.currIndex', recordCount * direction);
+    state.incrementProperty('currIndex', recordCount * direction);
     return recordsApplied;
   },
 
   _addRecord(record) {
-    if(!shouldIgnoreRecord(this.get('ignoredProperties'), record)) {
+    const state = this.get('_rootMachineState');
+
+    if(!shouldIgnoreRecord(state.ignoredProperties, record)) {
       this._recalibrate();
-      this.get('records').pushObject(Object.freeze(record));
-      this.incrementProperty('_meta.currIndex');
+      state.get('records').pushObject(Object.freeze(record));
+      state.incrementProperty('currIndex');
     }
   }
 });

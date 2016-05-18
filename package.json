@@ -57,7 +57,8 @@
     "ember-addon"
   ],
   "dependencies": {
-    "ember-cli-babel": "^5.1.6"
+    "ember-cli-babel": "^5.1.6",
+    "ember-weakmap": "^1.1.0"
   },
   "ember-addon": {
     "configPath": "tests/dummy/config"

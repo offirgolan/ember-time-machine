@@ -3,42 +3,37 @@ import TimeMachine from 'ember-time-machine';
 
 const {
   get,
-  isArray,
-  isNone
+  isArray
 } = Ember;
 
 export function wrapValue(obj, key, value) {
-  const availableMachines = obj.get('_meta').availableMachines;
-  const guid = Ember.guidFor(value);
+  const state = obj.get('_rootMachineState');
+  const availableMachines = state.availableMachines;
   let machine;
 
-  if(!isNone(availableMachines[guid])) {
-    return availableMachines[guid];
+  if(availableMachines && availableMachines.has(value)) {
+    return availableMachines.get(value);
   }
 
   if(value && isArray(value) && !get(value, '__isTimeMachine__')) {
     machine = TimeMachine.Array.create({
       content: value,
-      records: obj.get('records'),
-      ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),
-      _meta: obj.get('_meta')
+      _rootMachine: obj.get('_rootMachine')
     });
 
-    availableMachines[guid] = machine;
+    availableMachines.set(value, machine);
     return machine;
   }
 
   if(value && value instanceof Ember.Object && !get(value, '__isTimeMachine__')) {
     machine = TimeMachine.Object.create({
       content: value,
-      records: obj.get('records'),
-      ignoredProperties: obj.get('ignoredProperties'),
       _path: obj.get('_path').concat(key),
-      _meta: obj.get('_meta')
+      _rootMachine: obj.get('_rootMachine')
     });
 
-    availableMachines[guid] = machine;
+    availableMachines.set(value, machine);
     return machine;
   }
 

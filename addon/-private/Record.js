@@ -10,9 +10,9 @@ export default class Record {
     this.timestamp = (new Date()).toString();
     this.isArray = isArray;
 
-    if(!isUndefined(before) && !isUndefined(after)) {
+    if(before !== undefined && after !== undefined) {
       this.type = 'MODIFY';
-    } else if(isUndefined(before)) {
+    } else if(before === undefined) {
       this.type = 'ADD';
     } else {
       this.type = 'DELETE';
@@ -26,8 +26,4 @@ export default class Record {
   get fullPath() {
     return this.path.concat(this.key).join('.');
   }
-}
-
-function isUndefined(value) {
-  return value === undefined;
 }
