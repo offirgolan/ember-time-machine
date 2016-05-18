@@ -5,9 +5,9 @@ $roboto-font-path: '../assets/';
 @import 'components/color';
 
 // Custom color settings go here
-$primary-color: color("deep-orange", "lighten-1");
-$secondary-color: color("teal", "lighten-1");
-
+$primary-color: color("blue-grey", "darken-1");
+$secondary-color: color("deep-orange", "lighten-1");
+$success-color: $primary-color;
 
 @import 'components/variables';
 @import "materialize";
@@ -23,6 +23,46 @@ a {
   cursor: pointer;
 }
 
-.collection {
+.collection.task-list {
   border: none;
+
+  .task-item {
+    .row {
+      margin-bottom: 0;
+    }
+    .remove-task {
+      visibility: hidden;
+    }
+
+    &:hover {
+      .remove-task {
+        visibility: visible;
+      }
+    }
+  }
+}
+
+.new-task {
+  .row {
+    margin-bottom: 0;
+    input {
+      margin: 0;
+    }
+    .new-task-icon {
+      margin-top: 30px;
+      font-size: 36px;
+      font-weight: 200;
+    }
+  }
+}
+
+
+.fixed-btns {
+  .fa-repeat.all:after,
+  .fa-undo.all:after {
+    content: 'all';
+    font-size: 10px;
+    text-transform: none;
+    font-family: "Roboto", sans-serif;
+  }
 }

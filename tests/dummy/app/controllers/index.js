@@ -1,29 +1,14 @@
 import Ember from 'ember';
 
-const {
-  computed
-} = Ember;
-
 export default Ember.Controller.extend({
   store: Ember.inject.service(),
 
   newTask: '',
-  filter: 'all',
-
-  tasks: computed('filter', function() {
-    const filter = this.get('filter');
-    if(filter === 'all') {
-      return this.get('model.tasks');
-    } else if(filter === 'active') {
-      return this.get('model.activeTasks');
-    } else {
-      return this.get('model.completedTasks');
-    }
-  }),
+  tasksArray: 'tasks',
 
   actions: {
     addTask() {
-      const newTask = this.get('store').createRecord('task', { text: this.get('newTask') });
+      const newTask = this.get('store').createRecord('task', { title: this.get('newTask') });
       if(this.get('model.settings.newOnTop')) {
         this.get('model.tasks').insertAt(0, newTask);
       } else {
@@ -31,8 +16,8 @@ export default Ember.Controller.extend({
       }
       this.set('newTask', '');
     },
-    removeTask(friend) {
-      this.get('model.dsModel.friends').removeObject(friend);
+    removeTask(task) {
+      this.get('model.tasks').removeObject(task);
     },
     undo() {
       this.get('model').undo();

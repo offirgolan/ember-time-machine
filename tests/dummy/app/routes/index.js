@@ -4,7 +4,11 @@ import TimeMachine from 'ember-time-machine';
 export default Ember.Route.extend({
   model() {
     return Ember.RSVP.hash({
-      model: this.store.findRecord('user', 1),
+      model: this.store.createRecord('user', {
+        avatar: 'images/tomster.png',
+        firstName: 'Tom',
+        lastName: 'Ster'
+      }),
       tasks: this.store.findAll('task')
     });
   },

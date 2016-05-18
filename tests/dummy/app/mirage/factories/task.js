@@ -8,7 +8,6 @@ import Mirage, { faker } from 'ember-cli-mirage';
 faker.locale = "en_US";
 
 export default Mirage.Factory.extend({
-  text: faker.lorem.sentence,
-  dueDate: faker.date.future,
+  title: faker.lorem.sentence,
   isCompleted: false
 });

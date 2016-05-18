@@ -1,13 +1,14 @@
 <div class="container">
+	<div class="row"></div>
 	<div class="row">
 		<div class="col s4">
 			{{#md-card}}
 				{{#md-card-content}}
 					<div class="row center-align">
-						<img src={{model.avatar}} alt="" class="circle responsive-img"> <!-- notice the "circle" class -->
+						<img src={{model.avatar}} alt="" width="200px" class="circle deep-orange lighten-2 responsive-img"> <!-- notice the "circle" class -->
 					</div>
 					<div class="row">
-						{{md-input value=model.firstName label='First Name' class="col s12"}}
+						{{md-input value=model.firstName label='First Name' class="col s12" validate=false}}
 						{{md-input value=model.lastName label='Last Name' class="col s12"}}
 					</div>
 		    {{/md-card-content}}
@@ -30,11 +31,11 @@
 		</div>
 		<div class="col s8">
 			{{#if model.settings.newTasks}}
-				{{#md-card}}
+				{{#md-card class="new-task"}}
 					{{#md-card-content}}
 						<div class="row">
-							<div class="col s1">
-								<span class="fa fa-pencil"></span>
+							<div class="col s1 center-align">
+								<span class="new-task-icon">+</span>
 							</div>
 							<div class="col s11">
 									{{input value=newTask placeholder="What needs to be done?" enter=(action 'addTask')}}
@@ -47,20 +48,29 @@
 			{{#md-card}}
 			    {{#md-card-content}}
 						{{#if model.settings.showTabs}}
-							{{#md-tabs selected=filter}}
-								{{md-tab value='all' title="All"}}
-								{{md-tab value='active' title="Active"}}
-								{{md-tab value='completed' title="Completed"}}
+							{{#md-tabs selected=tasksArray}}
+								{{md-tab value='tasks' title="All"}}
+								{{md-tab value='activeTasks' title="Active"}}
+								{{md-tab value='completedTasks' title="Completed"}}
 							{{/md-tabs}}
 						{{/if}}
 
-						{{#md-collection content=tasks as |task|}}
-							<div class="collection-item">
+						{{#md-collection content=(get model tasksArray) class="task-list" as |task|}}
+							<div class="collection-item task-item">
 								{{#if task.isEditing}}
-									{{input value=task.text enter=(action (toggle 'isEditing' task))}}
+									{{input value=task.title enter=(action (toggle 'isEditing' task)) focusOut=(action (toggle 'isEditing' task))}}
 								{{else}}
-									{{md-check checked=(mut task.isCompleted) class="pull-left"}}
-									<span {{action (toggle 'isEditing' task) on="doubleClick"}}>{{task.text}}</span>
+									<div class="row">
+										<div class="col s1">
+											{{md-check checked=(mut task.isCompleted)}}
+										</div>
+										<div class="title col s10" {{action (toggle 'isEditing' task) on="doubleClick"}}>
+											{{task.title}}
+										</div>
+										<div class="remove-task col s1 right-align">
+											<a class="fa fa-trash-o deep-orange-text" {{action 'removeTask' task}}></a>
+										</div>
+									</div>
 								{{/if}}
 							</div>
 						{{/md-collection}}
@@ -76,7 +86,7 @@
       {{#draggable-object content=task overrideClass='sortObject' isSortable=true}}
 				{{#md-card class="col s3"}}
 					{{#md-card-content}}
-						{{task.text}}
+						{{task.title}}
 					{{/md-card-content}}
 					{{#md-card-action}}
 						{{md-check checked=task.isCompleted}}
@@ -115,28 +125,28 @@
 </div> --}}
 
 {{#md-fixed-btns
-	class="fixed-btns-example"
+	class="fixed-btns"
 	btnIcon="fa fa-undo"
-	btnClass="btn-large grey"
+	btnClass="btn-large deep-orange darken-1"
 	action="undo"}}
 
 	{{md-fixed-btn
-		btnClass="indigo"
+		btnClass="blue-grey lighten-1"
 		btnIcon="fa fa-floppy-o"
 		action="commit"}}
 
 	{{md-fixed-btn
-		btnClass="deep-purple"
+		btnClass="yellow darken-1"
 		btnIcon="fa fa-repeat all"
 		action="redoAll"}}
 
 	{{md-fixed-btn
-		btnClass="green"
+		btnClass="amber lighten-1"
 		btnIcon="fa fa-undo all"
 		action="undoAll"}}
 
 	{{md-fixed-btn
-		btnClass="green"
+		btnClass="orange darken-1"
 		btnIcon="fa fa-repeat"
 		action="redo"}}
 {{/md-fixed-btns}}
