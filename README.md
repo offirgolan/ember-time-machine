@@ -19,9 +19,15 @@ An object state management solution
 
 ## Installation
 
-```bash
+```
 ember install ember-time-machine
 ```
+
+## Helpful Links
+
+- ### [Live Demo](http://offirgolan.github.io/ember-time-machine)
+
+- ### [Changelog](CHANGELOG.md)
 
 ## Looking for help?
 If it is a bug [please open an issue on GitHub](http://github.com/offirgolan/ember-time-machine/issues).
@@ -108,9 +114,11 @@ const arrayMachine = TimeMachine.Array.create({ content, ignoredProperties });
 Undo the specified amount of changes that were recorded on the root machine and its children
 
 _Params_
-	- numUndos ( __Number__ ): Amount of undo operations to do. Defaults to 1
+	
+  - numUndos ( __Number__ ): Amount of undo operations to do. Defaults to 1
 
 _Returns:_
+
 (  __Array__ )  All records that were undone
 
 ```javascript
@@ -123,6 +131,7 @@ timeMachine.undo(5);
 Undo all changes that were recorded on the root machine and its children
 
 _Returns:_
+
 (  __Array__ )  All records that were undone
 
 ```javascript
@@ -134,9 +143,11 @@ timeMachine.undoAll();
 Redo the specified amount of changes that were undone on the root machine and its children
 
 _Params:_
+
 	- numRedos ( __Number__ ): Amount of redo operations to do. Defaults to 1
 
 _Returns:_
+
 (  __Array__ )  All records that were redone
 
 ```javascript
@@ -149,6 +160,7 @@ timeMachine.redo(5);
 Redo all changes that were undone on the root machine and its children
 
 _Returns:_
+
 (  __Array__ )  All records that were redone
 
 ```javascript
