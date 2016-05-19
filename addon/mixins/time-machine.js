@@ -1,6 +1,7 @@
 import Ember from 'ember';
-import shouldIgnoreRecord from 'ember-time-machine/utils/should-ignore-record';
+import WeakMap from 'ember-weakmap';
 import MachineStates from 'ember-time-machine/-private/machine-states';
+import RecordUtils from 'ember-time-machine/utils/record';
 import { setObject } from 'ember-time-machine/utils/object';
 
 const {
@@ -11,23 +12,76 @@ const {
 } = Ember;
 
 export default Ember.Mixin.create({
-  ignoredProperties: null,
-  inFlight: false,
-
-  // Private
-  _path: null,
-  _rootMachine: null,
   __isTimeMachine__: true,
 
+  /**
+   * A flag set when the machine is working. Toggled during undo and redo.
+   *
+   * @property inFlight
+   * @type {Boolean}
+   * @default false
+   */
+  inFlight: false,
+
+  /**
+   * An array of properties to ignore. Allows use of `@each`
+   * ex) `['prop', 'obj.array.@each.prop']`
+   *
+   * @property ignoredProperties
+   * @type {Array}
+   */
+  ignoredProperties: null,
+
+  // Private
+
+  /**
+   * Path from root machine to this one
+   *
+   * @property _path
+   * @type {Array}
+   * @private
+   */
+  _path: null,
+
+  /**
+   * Reference to the root machine. This is used to retrieve the state
+   * of the root machine and all its children
+   *
+   * @property _rootMachine
+   * @type {TimeMachine}
+   * @private
+   */
+  _rootMachine: null,
+
+  /**
+   * The state of the root machine that is also shared with all its children
+   *
+   * @property _rootMachineState
+   * @type {Ember.Object}
+   * @private
+   */
   _rootMachineState: computed('_rootMachine', function() {
       return MachineStates.get(this.get('_rootMachine'));
   }).readOnly(),
 
+
+  /**
+   * Determines if undo operations can be done
+   *
+   * @property canUndo
+   * @type {Boolean}
+   */
   canUndo: computed('_rootMachineState.records.[]', '_rootMachineState.currIndex', function() {
     const state = this.get('_rootMachineState');
     return !isEmpty(state.get('records')) && state.get('currIndex') > - 1;
   }),
 
+  /**
+   * Determines if redo operations can be done
+   *
+   * @property canRedo
+   * @type {Boolean}
+   */
   canRedo: computed('_rootMachineState.records.[]', '_rootMachineState.currIndex', function() {
     const state = this.get('_rootMachineState');
     const records = state.get('records');
@@ -40,6 +94,14 @@ export default Ember.Mixin.create({
     this._setupMachine();
   },
 
+  /**
+   * Undo the specified amount of changes that were recorded on the root machine
+   * and its children
+   *
+   * @method undo
+   * @param  {Number} numUndos Amount of undo operations to do. Defaults to 1
+   * @return {Array}  All records that were undone
+   */
   undo(numUndos = 1) {
     const state = this.get('_rootMachineState');
     let appliedRecords = [];
@@ -53,6 +115,14 @@ export default Ember.Mixin.create({
     return appliedRecords;
   },
 
+  /**
+   * Redo the specified amount of changes that were undone on the root machine
+   * and its children
+   *
+   * @method redo
+   * @param  {Number} numRedos Amount of redo operations to do. Defaults to 1
+   * @return {Array}  All records that were redone
+   */
   redo(numRedos = 1) {
     const state = this.get('_rootMachineState');
     let appliedRecords = [];
@@ -66,16 +136,36 @@ export default Ember.Mixin.create({
     return appliedRecords;
   },
 
+  /**
+   * Undo all changes that were recorded on the root machine
+   * and its children
+   *
+   * @method undoAll
+   * @return {Array}  All records that were undone
+   */
   undoAll() {
     const state = this.get('_rootMachineState');
     return this.undo(state.get('currIndex') + 1);
   },
 
+  /**
+   * Redo all changes that were undone on the root machine
+   * and its children
+   *
+   * @method redoAll
+   * @return {Array}  All records that were redone
+   */
   redoAll() {
     const state = this.get('_rootMachineState');
     return this.redo(state.get('records.length') - state.get('currIndex') - 1);
   },
 
+  /**
+   * Clears all recorded changes and resets the state of the root machine and
+   * all its children
+   *
+   * @method commit
+   */
   commit() {
     const state = this.get('_rootMachineState');
     state.get('records').setObjects([]);
@@ -98,23 +188,42 @@ export default Ember.Mixin.create({
     }
   },
 
+  /**
+   * If this machine is the root machine, setup the necessary state and add it
+   * to the global MachineStates map
+   *
+   * @method _setupMachine
+   * @private
+   */
   _setupMachine() {
     if(isNone(this.get('_rootMachine')) && !MachineStates.has(this)) {
       let availableMachines = new WeakMap();
       let ignoredProperties = this.get('ignoredProperties');
 
+      // Add root to the collection
       availableMachines.set(this.get('content'), this);
+
+      // Create the new state that will be shared across all children of this content
       MachineStates.set(this, Ember.Object.create({
         currIndex: -1,
         records: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? emberArray() : ignoredProperties,
         availableMachines
       }));
+
       this.set('_rootMachine', this);
       this.set('_path', emberArray());
     }
   },
 
+  /**
+   * If the current index is not at the top of the stack, remove all records
+   * above it. This gets called before every record is added and is needed when
+   * undo is called then a record is added.
+   *
+   * @method _recalibrate
+   * @private
+   */
   _recalibrate() {
     const state = this.get('_rootMachineState');
     const records = state.get('records');
@@ -132,22 +241,16 @@ export default Ember.Mixin.create({
     }
   },
 
-  _undoArrayRecord(array, record) {
-    if(record.type === 'ADD') {
-      array.replace(record.key, record.after.length, []);
-    } else if(record.type === 'DELETE') {
-      array.replace(record.key, 0, record.before);
-    }
-  },
-
-  _redoArrayRecord(array, record) {
-    if(record.type === 'ADD') {
-      array.replace(record.key, 0, record.after);
-    } else if(record.type === 'DELETE') {
-      array.replace(record.key, record.before.length, []);
-    }
-  },
-
+  /**
+   * Apply the specified number of records give the starting index.
+   *
+   * @method _applyRecords
+   * @param  {String}      type       'undo' or 'redo'
+   * @param  {Number}      startIndex The starting index
+   * @param  {Number}      numRecords Number of records to apply
+   * @return {Array}                  Records that were applied
+   * @private
+   */
   _applyRecords(type, startIndex, numRecords) {
     const state = this.get('_rootMachineState');
     const records = state.get('records');
@@ -174,9 +277,9 @@ export default Ember.Mixin.create({
        */
       if(record.isArray) {
         if(type === 'undo') {
-          this._undoArrayRecord(record.target, record);
+          RecordUtils.undoArrayRecord(record);
         } else {
-          this._redoArrayRecord(record.target, record);
+          RecordUtils.redoArrayRecord(record);
         }
         recordsApplied.push(record);
       } else if(isLast || record.fullPath !== nextRecord.fullPath) {
@@ -196,10 +299,17 @@ export default Ember.Mixin.create({
     return recordsApplied;
   },
 
+  /**
+   * Add a record to records collection. Calling this method will also freeze
+   * the record via `Object.freeze` to disabled any modifications to its content
+   *
+   * @method _addRecord
+   * @param  {Record}   record
+   */
   _addRecord(record) {
     const state = this.get('_rootMachineState');
 
-    if(!shouldIgnoreRecord(state.ignoredProperties, record)) {
+    if(!RecordUtils.ignoreRecord(state.get('ignoredProperties'), record)) {
       this._recalibrate();
       state.get('records').pushObject(Object.freeze(record));
       state.incrementProperty('currIndex');

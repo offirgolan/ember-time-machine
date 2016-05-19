@@ -20,7 +20,7 @@ export function getObject(obj, key) {
     }
 
     if(isArray(o) && !isEmpty(k) && !isNaN(k)) {
-      o = o.objectAt(parseInt(k));
+      o = o.objectAt(parseInt(k, 10));
     } else {
       o = get(o, k);
     }

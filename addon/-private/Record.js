@@ -1,4 +1,4 @@
-import { unwrapValue } from 'ember-time-machine/utils/wrap-value';
+import { unwrapValue } from 'ember-time-machine/utils/value';
 
 export default class Record {
   constructor(target, path , key, before, after, isArray = false) {

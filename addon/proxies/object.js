@@ -1,7 +1,7 @@
 import Ember from 'ember';
 import RecordKeeperMixin from 'ember-time-machine/mixins/time-machine';
 import Record from 'ember-time-machine/-private/Record';
-import { wrapValue, unwrapValue } from 'ember-time-machine/utils/wrap-value';
+import { wrapValue, unwrapValue } from 'ember-time-machine/utils/value';
 
 export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
   unknownProperty(key) {

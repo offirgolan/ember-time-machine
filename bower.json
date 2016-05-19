@@ -10,5 +10,8 @@
     "lodash": "^4.12.0",
     "Faker": "~3.0.0",
     "font-awesome": "~4.5.0"
+  },
+  "devDependencies": {
+    "blanket": "5e94fc30f2e694bb5c3718ddcbf60d467f4b4d26"
   }
 }
