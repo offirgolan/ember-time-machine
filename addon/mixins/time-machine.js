@@ -207,6 +207,8 @@ export default Ember.Mixin.create({
   _setupMachine() {
     if(isNone(this.get('_rootMachine')) && !MachineStates.has(this)) {
       let availableMachines = new WeakMap();
+      let ignoredProperties = this.get('ignoredProperties');
+      let frozenProperties = this.get('frozenProperties');
 
       // Add root to the collection
       availableMachines.set(this.get('content'), this);
@@ -215,8 +217,8 @@ export default Ember.Mixin.create({
       MachineStates.set(this, Ember.Object.create({
         currIndex: -1,
         records: emberArray(),
-        ignoredProperties: emberArray(this.get('ignoredProperties')),
-        frozenProperties: emberArray(this.get('frozenProperties')),
+        ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
+        frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
         availableMachines
       }));
 
