@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import RecordKeeperMixin from 'ember-time-machine/mixins/time-machine';
 import Record from 'ember-time-machine/-private/Record';
+import RecordUtils from 'ember-time-machine/utils/record';
 import { wrapValue, unwrapValue } from 'ember-time-machine/utils/value';
 
 export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
@@ -9,16 +10,20 @@ export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
   },
 
   replaceContent(startIndex, numRemoved, objects) {
+    const state = this.get('_rootMachineState');
+    const path = this.get('_path');
     let before, after;
 
-    if(numRemoved > 0) {
-      before = this.slice(startIndex, startIndex + numRemoved);
-    } else {
-      after = objects;
+    if(state && !RecordUtils.pathInArray(state.get('frozenProperties'), path.join('.'))) {
+      if(numRemoved > 0) {
+        before = this.slice(startIndex, startIndex + numRemoved);
+      } else {
+        after = objects;
+      }
+
+      this._addRecord(new Record(this.get('content'), path, startIndex, before, after, true));
+
+      return this._super(startIndex, numRemoved, unwrapValue(objects));
     }
-
-    this._addRecord(new Record(this.get('content'), this.get('_path'), startIndex, before, after, true));
-
-    return this._super(startIndex, numRemoved, unwrapValue(objects));
   }
 });

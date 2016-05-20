@@ -15,7 +15,7 @@ export function wrapValue(obj, key, value) {
     return availableMachines.get(value);
   }
 
-  if(value && isArray(value) && !get(value, '__isTimeMachine__')) {
+  if(value && isArray(value) && !get(value, 'isTimeMachine')) {
     machine = TimeMachine.Array.create({
       content: value,
       _path: obj.get('_path').concat(key),
@@ -26,7 +26,7 @@ export function wrapValue(obj, key, value) {
     return machine;
   }
 
-  if(value && value instanceof Ember.Object && !get(value, '__isTimeMachine__')) {
+  if(value && value instanceof Ember.Object && !get(value, 'isTimeMachine')) {
     machine = TimeMachine.Object.create({
       content: value,
       _path: obj.get('_path').concat(key),
@@ -42,10 +42,10 @@ export function wrapValue(obj, key, value) {
 
 export function unwrapValue(value) {
   if(value && isArray(value)) {
-    return value.map(v => get(v, '__isTimeMachine__') ? unwrapValue(get(v, 'content')) : v);
+    return value.map(v => get(v, 'isTimeMachine') ? unwrapValue(get(v, 'content')) : v);
   }
 
-  if(value && (value instanceof Ember.ObjectProxy || get(value, '__isTimeMachine__'))) {
+  if(value && (value instanceof Ember.ObjectProxy || get(value, 'isTimeMachine'))) {
     return unwrapValue(get(value, 'content'));
   }
 

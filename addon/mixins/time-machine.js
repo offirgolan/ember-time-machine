@@ -12,7 +12,9 @@ const {
 } = Ember;
 
 export default Ember.Mixin.create({
-  __isTimeMachine__: true,
+  isTimeMachine: computed(function() {
+    return true;
+  }).readOnly(),
 
   /**
    * A flag set when the machine is working. Toggled during undo and redo.
@@ -31,6 +33,15 @@ export default Ember.Mixin.create({
    * @type {Array}
    */
   ignoredProperties: null,
+
+  /**
+   * An array of properties that will not be modified. Allows use of `@each`
+   * ex) `['prop', 'obj.array.@each.prop']`
+   *
+   * @property frozenProperties
+   * @type {Array}
+   */
+  frozenProperties: null,
 
   /**
    * Path from root machine to this one
@@ -196,7 +207,6 @@ export default Ember.Mixin.create({
   _setupMachine() {
     if(isNone(this.get('_rootMachine')) && !MachineStates.has(this)) {
       let availableMachines = new WeakMap();
-      let ignoredProperties = this.get('ignoredProperties');
 
       // Add root to the collection
       availableMachines.set(this.get('content'), this);
@@ -205,7 +215,8 @@ export default Ember.Mixin.create({
       MachineStates.set(this, Ember.Object.create({
         currIndex: -1,
         records: emberArray(),
-        ignoredProperties: isNone(ignoredProperties) ? emberArray() : ignoredProperties,
+        ignoredProperties: emberArray(this.get('ignoredProperties')),
+        frozenProperties: emberArray(this.get('frozenProperties')),
         availableMachines
       }));
 

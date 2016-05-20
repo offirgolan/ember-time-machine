@@ -107,6 +107,26 @@ const arrayMachine = TimeMachine.Array.create({ content, ignoredProperties });
 
 ```
 
+#### frozenProperties ( _Array_ )
+
+Properties that will not be modified. Supports nested keys including `@each`
+
+```javascript
+const content = Ember.Object.create({ array: Ember.A() });
+const frozenProperties = ['someProp', 'array', 'obj.array.@each.somProp'];
+
+const timeMachine = TimeMachine.Object.create({ content, ignoredProperties });
+
+timeMachine.set('someProp', 'foo');
+timeMachine.get('someProp'); // --> undefined
+
+timeMachine.set('someOtherProp', 'bar');
+timeMachine.get('someOtherProp'); // --> 'bar'
+
+timeMachine.get('array').pushObject('baz');
+timeMachine.get('array').objectAt(0); // --> undefined
+```
+
 ## API
 
 ### Properties
