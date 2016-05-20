@@ -32,8 +32,6 @@ export default Ember.Mixin.create({
    */
   ignoredProperties: null,
 
-  // Private
-
   /**
    * Path from root machine to this one
    *
@@ -309,7 +307,7 @@ export default Ember.Mixin.create({
   _addRecord(record) {
     const state = this.get('_rootMachineState');
 
-    if(!RecordUtils.ignoreRecord(state.get('ignoredProperties'), record)) {
+    if(!RecordUtils.pathInArray(state.get('ignoredProperties'), record.fullPath)) {
       this._recalibrate();
       state.get('records').pushObject(Object.freeze(record));
       state.incrementProperty('currIndex');

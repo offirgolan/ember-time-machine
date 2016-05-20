@@ -2,12 +2,14 @@ import Ember from 'ember';
 import TimeMachine from 'ember-time-machine';
 import { module, test } from 'qunit';
 
-let tm, state;
+let tm, state, content, ignoredProperties;
 
 module('Unit | Proxy | object', {
   beforeEach() {
+    ignoredProperties = Ember.A();
+    content = Ember.Object.create();
     tm =  TimeMachine.Object.create({
-      content: Ember.Object.create()
+      content, ignoredProperties
     });
 
     state = tm.get('_rootMachineState');
@@ -126,4 +128,77 @@ test('undo and redo all changes', function(assert) {
   assert.equal(tm.get('squared'), 100);
   assert.equal(records.length, 20);
   assert.equal(state.get('currIndex'), 19);
+});
+
+test('commit', function(assert) {
+  const records = state.get('records');
+
+  for(let i = 1; i <= 10; i++) {
+    tm.set('number', i);
+    tm.set('squared', i * i);
+  }
+
+  assert.equal(records.length, 20);
+  assert.equal(state.get('currIndex'), 19);
+
+  tm.commit();
+
+  assert.equal(records.length, 0);
+  assert.equal(state.get('currIndex'), -1);
+});
+
+test('recalibration', function(assert) {
+  const records = state.get('records');
+
+  tm.set('firstName', 'Offir');
+  tm.set('lastName', 'Golan');
+
+  assert.equal(tm.get('lastName'), 'Golan');
+  assert.equal(records.length, 2);
+  assert.equal(state.get('currIndex'), 1);
+
+  tm.undo();
+
+  assert.equal(tm.get('lastName'), undefined);
+  assert.equal(records.length, 2);
+  assert.equal(state.get('currIndex'), 0);
+
+  tm.set('lastName', 'G');
+
+  assert.equal(tm.get('lastName'), 'G');
+  assert.equal(records.length, 2);
+  assert.equal(state.get('currIndex'), 1);
+});
+
+test('ignoredProperties - shallow', function(assert) {
+  const records = state.get('records');
+
+  ignoredProperties.setObjects(['lastName']);
+
+  tm.set('firstName', 'Offir');
+
+  assert.equal(records.length, 1);
+  assert.equal(state.get('currIndex'), 0);
+
+  tm.set('lastName', 'Golan');
+
+  assert.equal(records.length, 1);
+  assert.equal(state.get('currIndex'), 0);
+});
+
+test('ignoredProperties - nested', function(assert) {
+  const records = state.get('records');
+
+  content.set('user', Ember.Object.create());
+  ignoredProperties.setObjects(['user.lastName']);
+
+  tm.set('user.firstName', 'Offir');
+
+  assert.equal(records.length, 1);
+  assert.equal(state.get('currIndex'), 0);
+
+  tm.set('user.lastName', 'Golan');
+
+  assert.equal(records.length, 1);
+  assert.equal(state.get('currIndex'), 0);
 });
