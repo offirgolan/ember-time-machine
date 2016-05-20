@@ -24,18 +24,32 @@ a {
   cursor: pointer;
 }
 
-nav .brand-logo {
-  white-space: nowrap;
-  padding-left: 20px;
+nav {
+  .brand-logo {
+    white-space: nowrap;
+    padding-left: 20px;
 
-  .ember-logo {
-    height: 50px;
-    padding-top: 8px;
+    .ember-logo {
+      height: 50px;
+      padding-top: 8px;
+    }
+
+    > span {
+      font-size: 22px;
+      vertical-align: top;
+    }
   }
 
-  > span {
-    font-size: 22px;
-    vertical-align: top;
+  .right {
+    padding-right: 20px;
+    .fa-github {
+      font-size: 34px;
+      vertical-align: middle;
+
+      &:hover {
+        background: transparent;
+      }
+    }
   }
 }
 

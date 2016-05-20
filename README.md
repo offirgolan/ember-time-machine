@@ -109,12 +109,24 @@ const arrayMachine = TimeMachine.Array.create({ content, ignoredProperties });
 
 ## API
 
+### Properties
+
+#### canUndo ( _Boolean_ )
+
+Determines if undo operations can be done
+
+#### canRedo ( _Boolean_ )
+
+Determines if redo operations can be done
+
+### Methods
+
 #### undo ( _numUndos_ )
 
 Undo the specified amount of changes that were recorded on the root machine and its children
 
 _Params_
-	
+
   - numUndos ( __Number__ ): Amount of undo operations to do. Defaults to 1
 
 _Returns:_
