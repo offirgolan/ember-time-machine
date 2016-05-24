@@ -28,7 +28,7 @@ export default Ember.Controller.extend({
     },
 
     undoAll() {
-      this.get('model').undoAll();
+      this.get('model').undoAll({ on: ['tasks.@each.isCompleted']});
     },
 
     redoAll() {
