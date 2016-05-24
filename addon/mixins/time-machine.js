@@ -6,12 +6,17 @@ import { setObject } from 'ember-time-machine/utils/object';
 
 const {
   isNone,
+  isArray,
   isEmpty,
   computed,
   A: emberArray
 } = Ember;
 
 export default Ember.Mixin.create({
+  /**
+   * @property isTimeMachine
+   * @type {Boolean}
+   */
   isTimeMachine: computed(function() {
     return true;
   }).readOnly(),
@@ -107,17 +112,23 @@ export default Ember.Mixin.create({
    * Undo the specified amount of changes that were recorded on the root machine
    * and its children
    *
+   * ## Options
+   *
+   * - `on` (**Array**): Only run undo operations on the given keys
+   * - `excludes` (**Array**): Exclude undo operations on the given keys
+   *
    * @method undo
+   * @param  {Object} options
    * @param  {Number} numUndos Amount of undo operations to do. Defaults to 1
    * @return {Array}  All records that were undone
    */
-  undo(numUndos = 1) {
+  undo(numUndos = 1, options = {}) {
     const state = this.get('_rootMachineState');
     let appliedRecords = [];
 
     if(this.get('canUndo') && !this.get('inFlight')) {
       this.set('inFlight', true);
-      appliedRecords = this._applyRecords('undo', state.get('currIndex'), numUndos);
+      appliedRecords = this._applyRecords('undo', state.get('currIndex'), numUndos, options);
       this.set('inFlight', false);
     }
 
@@ -128,17 +139,22 @@ export default Ember.Mixin.create({
    * Redo the specified amount of changes that were undone on the root machine
    * and its children
    *
+   * ## Options
+   *
+   * - `on` (**Array**): Only run redo operations on the given keys
+   * - `excludes` (**Array**): Exclude redo operations on the given keys
+   *
    * @method redo
    * @param  {Number} numRedos Amount of redo operations to do. Defaults to 1
    * @return {Array}  All records that were redone
    */
-  redo(numRedos = 1) {
+  redo(numRedos = 1, options = {}) {
     const state = this.get('_rootMachineState');
     let appliedRecords = [];
 
     if(this.get('canRedo') && !this.get('inFlight')) {
       this.set('inFlight', true);
-      appliedRecords =  this._applyRecords('redo', state.get('currIndex') + 1, numRedos);
+      appliedRecords =  this._applyRecords('redo', state.get('currIndex') + 1, numRedos, options);
       this.set('inFlight', false);
     }
 
@@ -150,11 +166,12 @@ export default Ember.Mixin.create({
    * and its children
    *
    * @method undoAll
+   * @param  {Object} options
    * @return {Array}  All records that were undone
    */
-  undoAll() {
+  undoAll(options = {}) {
     const state = this.get('_rootMachineState');
-    return this.undo(state.get('currIndex') + 1);
+    return this.undo(state.get('currIndex') + 1, options);
   },
 
   /**
@@ -162,11 +179,12 @@ export default Ember.Mixin.create({
    * and its children
    *
    * @method redoAll
+   * @param  {Object} options
    * @return {Array}  All records that were redone
    */
-  redoAll() {
+  redoAll(options = {}) {
     const state = this.get('_rootMachineState');
-    return this.redo(state.get('records.length') - state.get('currIndex') - 1);
+    return this.redo(state.get('records.length') - state.get('currIndex') - 1, options);
   },
 
   /**
@@ -259,12 +277,16 @@ export default Ember.Mixin.create({
    * @param  {String}      type       'undo' or 'redo'
    * @param  {Number}      startIndex The starting index
    * @param  {Number}      numRecords Number of records to apply
+   * @param  {Object}      options
    * @return {Array}                  Records that were applied
    * @private
    */
-  _applyRecords(type, startIndex, numRecords) {
+  _applyRecords(type, startIndex, numRecords, options = {}) {
     const state = this.get('_rootMachineState');
     const records = state.get('records');
+
+    const whitelist = options.on;
+    const blacklist = options.excludes;
 
     let recordsApplied = [];
     let currIndex = startIndex;
@@ -272,12 +294,15 @@ export default Ember.Mixin.create({
     let direction = (type === 'undo' ? -1 : 1);
     let record, nextRecord;
 
+
     for(let i = 0; i < numRecords && currIndex > -1 && currIndex < records.length; i++, currIndex += direction) {
       record = records.objectAt(currIndex);
       nextRecord = records.objectAt(currIndex + direction);
       let isLast = !isNone(nextRecord) || i === numRecords - 1;
 
-      if(isNone(record)) {
+      if(isNone(record) ||
+         (isArray(whitelist) && !RecordUtils.pathInArray(whitelist, record.fullPath)) ||
+         (isArray(blacklist) && RecordUtils.pathInArray(blacklist, record.fullPath))) {
         continue;
       }
 
@@ -304,6 +329,14 @@ export default Ember.Mixin.create({
       }
 
       recordCount++;
+    }
+
+    /*
+      If whitelist or blacklist, push all applied records to the top of the stack
+     */
+    if(isArray(whitelist) || isArray(blacklist)) {
+      records.removeObjects(recordsApplied);
+      records.pushObjects(recordsApplied);
     }
 
     state.incrementProperty('currIndex', recordCount * direction);
