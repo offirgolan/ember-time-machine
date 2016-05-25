@@ -9,6 +9,7 @@ const {
   isArray,
   isEmpty,
   computed,
+  tryInvoke,
   A: emberArray
 } = Ember;
 
@@ -108,6 +109,22 @@ export default Ember.Mixin.create({
     this._setupMachine();
   },
 
+  destroy() {
+    this._super(...arguments);
+
+    const content = this.get('content');
+    const rootMachine = this.get('_rootMachine');
+    const availableMachines = this.get('_rootMachineState').availableMachines;
+
+    if(availableMachines.has(content)) {
+      availableMachines.delete(content);
+    }
+
+    if(rootMachine === this) {
+      MachineStates.delete(this);
+    }
+  },
+
   /**
    * Undo the specified amount of changes that were recorded on the root machine
    * and its children
@@ -199,19 +216,21 @@ export default Ember.Mixin.create({
     state.set('currIndex', -1);
   },
 
-  destroy() {
-    this._super(...arguments);
-
+  /**
+   * Invokes the named method on the content or on every object if the content is an array
+   *
+   * @method invoke
+   * @param {String} methodName the name of the method
+   * @param {Object...} args optional arguments to pass as well.
+   * @return {Unknown} return values from calling invoke.
+   */
+  invoke(methodName, ...args) {
     const content = this.get('content');
-    const rootMachine = this.get('_rootMachine');
-    const availableMachines = this.get('_rootMachineState').availableMachines;
 
-    if(availableMachines.has(content)) {
-      availableMachines.delete(content);
-    }
-
-    if(rootMachine === this) {
-      MachineStates.delete(this);
+    if(isArray(content) && this instanceof Ember.ArrayProxy) {
+      return this._super(...arguments);
+    } else {
+      return tryInvoke(content, methodName, args);
     }
   },
 
@@ -271,7 +290,7 @@ export default Ember.Mixin.create({
   },
 
   /**
-   * Apply the specified number of records give the starting index.
+   * Apply the specified number of records give the starting index
    *
    * @method _applyRecords
    * @param  {String}      type       'undo' or 'redo'
@@ -281,30 +300,18 @@ export default Ember.Mixin.create({
    * @return {Array}                  Records that were applied
    * @private
    */
-  _applyRecords(type, startIndex, numRecords, options = {}) {
+  _applyRecords(type /*, startIndex, numRecords, options = {} */) {
     const state = this.get('_rootMachineState');
     const records = state.get('records');
+    const currIndex = state.get('currIndex');
 
-    const whitelist = options.on;
-    const blacklist = options.excludes;
-
-    let recordsApplied = [];
-    let currIndex = startIndex;
-    let recordCount = 0;
+    let extractedRecords = this._extractRecords(...arguments);
     let direction = (type === 'undo' ? -1 : 1);
-    let record, nextRecord;
+    let insertAtIndex = currIndex + 1;
 
-
-    for(let i = 0; i < numRecords && currIndex > -1 && currIndex < records.length; i++, currIndex += direction) {
-      record = records.objectAt(currIndex);
-      nextRecord = records.objectAt(currIndex + direction);
-      let isLast = !isNone(nextRecord) || i === numRecords - 1;
-
-      if(isNone(record) ||
-         (isArray(whitelist) && !RecordUtils.pathInArray(whitelist, record.fullPath)) ||
-         (isArray(blacklist) && RecordUtils.pathInArray(blacklist, record.fullPath))) {
-        continue;
-      }
+    extractedRecords.forEach((record, i) => {
+      let nextRecord = extractedRecords.objectAt(i + 1);
+      let isLast = isNone(nextRecord) || i === extractedRecords.length - 1;
 
       /*
         Array operations must be done one a time since it will be
@@ -317,7 +324,6 @@ export default Ember.Mixin.create({
         } else {
           RecordUtils.redoArrayRecord(record);
         }
-        recordsApplied.push(record);
       } else if(isLast || record.fullPath !== nextRecord.fullPath) {
         /*
           Apply the last object property change that occured in a row.
@@ -325,22 +331,64 @@ export default Ember.Mixin.create({
               the first of the five records. Redo will be the last of the five.
          */
         setObject(record.target, record.key, type === 'undo' ? record.before : record.after);
-        recordsApplied.push(record);
       }
-
-      recordCount++;
-    }
+    });
 
     /*
-      If whitelist or blacklist, push all applied records to the top of the stack
+      Flip the record order since undo operations are in reverse and reduce the
+      insert index by the extracted record length. This is because currIndex will
+      always be greater than records.length due to the record extraction.
      */
-    if(isArray(whitelist) || isArray(blacklist)) {
-      records.removeObjects(recordsApplied);
-      records.pushObjects(recordsApplied);
+    if(type === 'undo') {
+      insertAtIndex -= extractedRecords.length;
+      extractedRecords.reverseObjects();
     }
 
-    state.incrementProperty('currIndex', recordCount * direction);
-    return recordsApplied;
+    records.splice(insertAtIndex, 0, ...extractedRecords);
+
+    state.incrementProperty('currIndex', extractedRecords.length * direction);
+
+    return extractedRecords;
+  },
+
+  /**
+   * Extract the specified number of records given the starting index and options
+   * from the root machine's record collection
+   *
+   * @method _extractRecords
+   * @param  {String}      type       'undo' or 'redo'
+   * @param  {Number}      startIndex The starting index
+   * @param  {Number}      numRecords Number of records to apply
+   * @param  {Object}      options
+   * @return {Array}                  Records that were extracted
+   * @private
+   */
+  _extractRecords(type, startIndex, numRecords, options = {}) {
+    const state = this.get('_rootMachineState');
+    const records = state.get('records');
+
+    const whitelist = options.on;
+    const blacklist = options.excludes;
+
+    let extractedRecords = [];
+    let currIndex = startIndex;
+    let direction = (type === 'undo' ? -1 : 1);
+
+    for(let i = 0; i < numRecords && currIndex > -1 && currIndex < records.length; currIndex += direction) {
+      let record = records.objectAt(currIndex);
+
+      if(isNone(record) ||
+         (isArray(whitelist) && !RecordUtils.pathInArray(whitelist, record.fullPath)) ||
+         (isArray(blacklist) && RecordUtils.pathInArray(blacklist, record.fullPath))) {
+        continue;
+      }
+
+      extractedRecords.push(record);
+      i++;
+    }
+
+    records.removeObjects(extractedRecords);
+    return emberArray(extractedRecords);
   },
 
   /**
