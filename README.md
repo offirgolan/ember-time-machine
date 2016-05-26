@@ -238,7 +238,7 @@ Invokes the named method on the content or on every object if the content is an 
 
 _Params:_
 
-	- methodName ( __String__ )   : The name of the method
+  - methodName ( __String__ )   : The name of the method
   - args       ( __Object...__ ): Optional arguments to pass
 
 _Returns:_
