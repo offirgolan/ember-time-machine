@@ -139,28 +139,42 @@ Determines if undo operations can be done
 
 Determines if redo operations can be done
 
+#### inFlight ( _Boolean_ )
+
+A flag set when the machine is working. Toggled during undo and redo.
+
+
 ### Methods
 
-#### undo ( _numUndos_ )
+#### undo ( _numUndos_ , _options_ )
 
 Undo the specified amount of changes that were recorded on the root machine and its children
 
-_Params_
+_Params:_
 
   - numUndos ( __Number__ ): Amount of undo operations to do. Defaults to 1
+  - options  ( __Object__ ):
+    - on       ( __Array__ ): Only run undo operations on the given keys
+    - excludes ( __Array__ ): Exclude undo operations on the given keys
 
 _Returns:_
 
 (  __Array__ )  All records that were undone
 
 ```javascript
-timeMachine.undo();
-timeMachine.undo(5);
+timeMachine.undo(); // Undo the last recorded change
+timeMachine.undo(5, { on: ['firstName'] }); // Undo the last 5 changes to firstName
 ```
 
-#### undoAll ( )
+#### undoAll ( _options_ )
 
 Undo all changes that were recorded on the root machine and its children
+
+_Params:_
+
+  - options  ( __Object__ ):
+    - on       ( __Array__ ): Run all undo operations on the given keys
+    - excludes ( __Array__ ): Exclude undo operations on the given keys
 
 _Returns:_
 
@@ -168,28 +182,38 @@ _Returns:_
 
 ```javascript
 timeMachine.undoAll();
+timeMachine.undoAll({ on: ['tasks.@each.isCompleted'], excludes: ['tasks.0.isCompleted'] });
 ```
 
-#### redo ( _numRedos_ )
+#### redo ( _numRedos_, _options_ )
 
 Redo the specified amount of changes that were undone on the root machine and its children
 
 _Params:_
 
-	- numRedos ( __Number__ ): Amount of redo operations to do. Defaults to 1
+  - numRedos ( __Number__ ): Amount of redo operations to do. Defaults to 1
+  - options  ( __Object__ ):
+    - on       ( __Array__ ): Only run redo operations on the given keys
+    - excludes ( __Array__ ): Exclude redo operations on the given keys
 
 _Returns:_
 
 (  __Array__ )  All records that were redone
 
 ```javascript
-timeMachine.redo();
-timeMachine.redo(5);
+timeMachine.redo(); // Redo the last undo operation
+timeMachine.redo(5, { on: ['firstName'] }); // Redo the last 5 undo operation to firstName
 ```
 
-#### redoAll ( )
+#### redoAll ( _options_ )
 
 Redo all changes that were undone on the root machine and its children
+
+_Params:_
+
+  - options  ( __Object__ ):
+    - on       ( __Array__ ): Run all redo operations on the given keys
+    - excludes ( __Array__ ): Exclude redo operations on the given keys
 
 _Returns:_
 
@@ -197,6 +221,7 @@ _Returns:_
 
 ```javascript
 timeMachine.redoAll();
+timeMachine.redoAll({ on: ['tasks.@each.isCompleted'], excludes: ['tasks.0.isCompleted'] });
 ```
 
 #### commit ( )
@@ -205,4 +230,22 @@ Clears all recorded changes and resets the state of the root machine and all its
 
 ```javascript
 timeMachine.commit();
+```
+
+#### invoke ( _methodName_, _...args_ )
+
+Invokes the named method on the content or on every object if the content is an array
+
+_Params:_
+
+	- methodName ( __String__ )   : The name of the method
+  - args       ( __Object...__ ): Optional arguments to pass
+
+_Returns:_
+
+(  __Unknown__ )  Values from calling invoke
+
+```javascript
+timeMachine.invoke('save'); // === timeMachine.get('content').save();
+timeMachine.invoke('set', 'foo', 'bar'); // === timeMachine.get('content').set('foo', 'bar');
 ```
