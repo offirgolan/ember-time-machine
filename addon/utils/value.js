@@ -8,33 +8,38 @@ const {
 
 export function wrapValue(obj, key, value) {
   const state = obj.get('_rootMachineState');
-  const availableMachines = state.availableMachines;
+  const availableMachines = state.get('availableMachines');
+  const fullPath = obj.get('_path').concat(key);
+  const maxDepth = state.get('maxDepth');
+  const shouldTrack = maxDepth < 0 || fullPath.length <= maxDepth;
   let machine;
 
   if(availableMachines && availableMachines.has(value)) {
     return availableMachines.get(value);
   }
 
-  if(value && isArray(value) && !get(value, 'isTimeMachine')) {
-    machine = TimeMachine.Array.create({
-      content: value,
-      _path: obj.get('_path').concat(key),
-      _rootMachine: obj.get('_rootMachine')
-    });
+  if(value && shouldTrack && !get(value, 'isTimeMachine')) {
+    if(isArray(value)) {
+      machine = TimeMachine.Array.create({
+        content: value,
+        _path: fullPath,
+        _rootMachine: obj.get('_rootMachine')
+      });
 
-    availableMachines.set(value, machine);
-    return machine;
-  }
+      availableMachines.set(value, machine);
+      return machine;
+    }
 
-  if(value && value instanceof Ember.Object && !get(value, 'isTimeMachine')) {
-    machine = TimeMachine.Object.create({
-      content: value,
-      _path: obj.get('_path').concat(key),
-      _rootMachine: obj.get('_rootMachine')
-    });
+    if(typeof value === 'object') {
+      machine = TimeMachine.Object.create({
+        content: value,
+        _path: fullPath,
+        _rootMachine: obj.get('_rootMachine')
+      });
 
-    availableMachines.set(value, machine);
-    return machine;
+      availableMachines.set(value, machine);
+      return machine;
+    }
   }
 
   return value;

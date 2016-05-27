@@ -104,7 +104,6 @@ const ignoredProperties = ['someProp', 'obj.array.@each.somProp'];
 const objectMachine = TimeMachine.Object.create({ content, ignoredProperties });
 
 const arrayMachine = TimeMachine.Array.create({ content, ignoredProperties });
-
 ```
 
 #### frozenProperties ( _Array_ )
@@ -125,6 +124,21 @@ timeMachine.get('someOtherProp'); // --> 'bar'
 
 timeMachine.get('array').pushObject('baz');
 timeMachine.get('array').objectAt(0); // --> undefined
+```
+
+#### maxDepth ( _Number_ )
+
+The Max nested level to track changes emitted by children of the receiver.
+If set to `-1`, all nested children will be tracked.
+
+__Default: -1__
+
+```javascript
+// Only track root level changes made by the receiver
+const objectMachine = TimeMachine.Object.create({ content,  maxDepth: 0 });
+
+// Track changes up to 2 levels deep ( model.friends.firstName )
+const objectMachine = TimeMachine.Object.create({ content,  maxDepth: 2 });
 ```
 
 ## API
@@ -229,7 +243,7 @@ timeMachine.commit();
 
 #### invoke ( _methodName_, _...args_ )
 
-Invokes the named method on the content or on every object if the content is an array
+Invokes the named method on the receiver or on every object if the receiver is an array
 
 _Params:_
 

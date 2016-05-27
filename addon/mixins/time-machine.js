@@ -41,6 +41,16 @@ export default Ember.Mixin.create({
   frozenProperties: null,
 
   /**
+   * The maximum depth in which to allow tracking changes emitted by children of the receiver.
+   * If set to `-1`, all nested children will be tracked.
+   *
+   * @property maxDepth
+   * @type {Number}
+   * @default -1
+   */
+  maxDepth: -1,
+
+  /**
    * Path from root machine to this one
    *
    * @property _path
@@ -233,6 +243,7 @@ export default Ember.Mixin.create({
       let availableMachines = new WeakMap();
       let ignoredProperties = this.get('ignoredProperties');
       let frozenProperties = this.get('frozenProperties');
+      let maxDepth = this.get('maxDepth');
 
       // Add root to the collection
       availableMachines.set(this.get('content'), this);
@@ -243,11 +254,14 @@ export default Ember.Mixin.create({
         records: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
         frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
+        maxDepth,
         availableMachines
       }));
 
-      this.set('_rootMachine', this);
-      this.set('_path', emberArray());
+      this.setProperties({
+        _rootMachine: this,
+        _path: emberArray()
+      });
     }
   },
 
