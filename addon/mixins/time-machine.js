@@ -23,15 +23,6 @@ export default Ember.Mixin.create({
   }).readOnly(),
 
   /**
-   * A flag set when the machine is working. Toggled during undo and redo.
-   *
-   * @property inFlight
-   * @type {Boolean}
-   * @default false
-   */
-  inFlight: false,
-
-  /**
    * An array of properties to ignore. Allows use of `@each`
    * ex) `['prop', 'obj.array.@each.prop']`
    *
@@ -143,10 +134,8 @@ export default Ember.Mixin.create({
     const state = this.get('_rootMachineState');
     let appliedRecords = [];
 
-    if(this.get('canUndo') && !this.get('inFlight')) {
-      this.set('inFlight', true);
+    if(this.get('canUndo')) {
       appliedRecords = this._applyRecords('undo', state.get('currIndex'), numUndos, options);
-      this.set('inFlight', false);
     }
 
     return appliedRecords;
@@ -169,10 +158,8 @@ export default Ember.Mixin.create({
     const state = this.get('_rootMachineState');
     let appliedRecords = [];
 
-    if(this.get('canRedo') && !this.get('inFlight')) {
-      this.set('inFlight', true);
+    if(this.get('canRedo')) {
       appliedRecords =  this._applyRecords('redo', state.get('currIndex') + 1, numRedos, options);
-      this.set('inFlight', false);
     }
 
     return appliedRecords;

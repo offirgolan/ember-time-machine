@@ -139,11 +139,6 @@ Determines if undo operations can be done
 
 Determines if redo operations can be done
 
-#### inFlight ( _Boolean_ )
-
-A flag set when the machine is working. Toggled during undo and redo.
-
-
 ### Methods
 
 #### undo ( _numUndos_ , _options_ )
