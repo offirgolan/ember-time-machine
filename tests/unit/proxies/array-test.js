@@ -23,7 +23,7 @@ test('single change detected', function(assert) {
   tm.pushObject('Offir');
 
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 
   let record = records[0];
 
@@ -41,7 +41,7 @@ test('multiple changes detected', function(assert) {
   }
 
   assert.equal(records.length, 10);
-  assert.equal(state.get('currIndex'), 9);
+  assert.equal(state.get('cursor'), 9);
 });
 
 test('undo single change - ADD', function(assert) {
@@ -51,13 +51,13 @@ test('undo single change - ADD', function(assert) {
 
   assert.equal(tm.objectAt(0), 'Offir');
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 
   tm.undo();
 
   assert.equal(tm.objectAt(0), undefined);
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), -1);
+  assert.equal(state.get('cursor'), -1);
 });
 
 test('undo single change - DELETE', function(assert) {
@@ -69,13 +69,13 @@ test('undo single change - DELETE', function(assert) {
 
   assert.equal(tm.objectAt(0), undefined);
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 
   tm.undo();
 
   assert.equal(tm.objectAt(0), 'Offir');
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), -1);
+  assert.equal(state.get('cursor'), -1);
 });
 
 test('undo all changes', function(assert) {
@@ -87,13 +87,13 @@ test('undo all changes', function(assert) {
 
   assert.equal(tm.objectAt(0), 1);
   assert.equal(records.length, 10);
-  assert.equal(state.get('currIndex'), 9);
+  assert.equal(state.get('cursor'), 9);
 
   tm.undoAll();
 
   assert.equal(tm.objectAt(0), undefined);
   assert.equal(records.length, 10);
-  assert.equal(state.get('currIndex'), -1);
+  assert.equal(state.get('cursor'), -1);
 });
 
 test('undo and redo single change - ADD', function(assert) {
@@ -103,19 +103,19 @@ test('undo and redo single change - ADD', function(assert) {
 
   assert.equal(tm.objectAt(0), 'Offir');
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 
   tm.undo();
 
   assert.equal(tm.objectAt(0), undefined);
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), -1);
+  assert.equal(state.get('cursor'), -1);
 
   tm.redo();
 
   assert.equal(tm.objectAt(0), 'Offir');
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 });
 
 test('undo and redo single change - DELETE', function(assert) {
@@ -127,19 +127,19 @@ test('undo and redo single change - DELETE', function(assert) {
 
   assert.equal(tm.objectAt(0), undefined);
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 
   tm.undo();
 
   assert.equal(tm.objectAt(0), 'Offir');
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), -1);
+  assert.equal(state.get('cursor'), -1);
 
   tm.redo();
 
   assert.equal(tm.objectAt(0), undefined);
   assert.equal(records.length, 1);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 });
 
 test('undo and redo all changes', function(assert) {
@@ -151,19 +151,19 @@ test('undo and redo all changes', function(assert) {
 
   assert.equal(tm.objectAt(0), 1);
   assert.equal(records.length, 10);
-  assert.equal(state.get('currIndex'), 9);
+  assert.equal(state.get('cursor'), 9);
 
   tm.undoAll();
 
   assert.equal(tm.objectAt(0), undefined);
   assert.equal(records.length, 10);
-  assert.equal(state.get('currIndex'), -1);
+  assert.equal(state.get('cursor'), -1);
 
   tm.redoAll();
 
   assert.equal(tm.objectAt(0), 1);
   assert.equal(records.length, 10);
-  assert.equal(state.get('currIndex'), 9);
+  assert.equal(state.get('cursor'), 9);
 });
 
 test('commit', function(assert) {
@@ -175,12 +175,12 @@ test('commit', function(assert) {
 
   assert.equal(tm.objectAt(0), 1);
   assert.equal(records.length, 10);
-  assert.equal(state.get('currIndex'), 9);
+  assert.equal(state.get('cursor'), 9);
 
   tm.commit();
 
   assert.equal(records.length, 0);
-  assert.equal(state.get('currIndex'), -1);
+  assert.equal(state.get('cursor'), -1);
 });
 
 test('recalibration', function(assert) {
@@ -191,19 +191,19 @@ test('recalibration', function(assert) {
 
   assert.equal(tm.objectAt(1), 'Golan');
   assert.equal(records.length, 2);
-  assert.equal(state.get('currIndex'), 1);
+  assert.equal(state.get('cursor'), 1);
 
   tm.undo();
 
   assert.equal(tm.objectAt(1), undefined);
   assert.equal(records.length, 2);
-  assert.equal(state.get('currIndex'), 0);
+  assert.equal(state.get('cursor'), 0);
 
   tm.pushObject('G');
 
   assert.equal(tm.objectAt(1), 'G');
   assert.equal(records.length, 2);
-  assert.equal(state.get('currIndex'), 1);
+  assert.equal(state.get('cursor'), 1);
 });
 
 
@@ -219,11 +219,11 @@ test('ignoredProperties - nested', function(assert) {
   tm.objectAt(1).set('firstName', 'David');
 
   assert.equal(records.length, 2);
-  assert.equal(state.get('currIndex'), 1);
+  assert.equal(state.get('cursor'), 1);
 
   tm.objectAt(0).set('lastName', 'Golan');
   tm.objectAt(1).set('lastName', 'Golan');
 
   assert.equal(records.length, 2);
-  assert.equal(state.get('currIndex'), 1);
+  assert.equal(state.get('cursor'), 1);
 });

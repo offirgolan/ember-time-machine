@@ -7,8 +7,11 @@ export default class Record {
     this.key = key;
     this.before = unwrapValue(before);
     this.after = unwrapValue(after);
-    this.timestamp = (new Date()).toString();
     this.isArray = isArray;
+
+    this.pathToKey = path.join('.');
+    this.fullPath  = path.concat(this.key).join('.');
+    this.timestamp = (new Date()).toString();
 
     if(before !== undefined && after !== undefined) {
       this.type = 'MODIFY';
@@ -17,13 +20,5 @@ export default class Record {
     } else {
       this.type = 'DELETE';
     }
-  }
-
-  get pathToKey() {
-    return this.path.join('.');
-  }
-
-  get fullPath() {
-    return this.path.concat(this.key).join('.');
   }
 }

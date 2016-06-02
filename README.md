@@ -258,3 +258,17 @@ _Returns:_
 timeMachine.invoke('save'); // === timeMachine.get('content').save();
 timeMachine.invoke('set', 'foo', 'bar'); // === timeMachine.get('content').set('foo', 'bar');
 ```
+
+
+#### printRecords ( properties )
+
+Neatly prints all current records to console
+
+_Params:_
+
+  - properties ( __Array__ )   : Override for which properties to be displayed
+
+```javascript
+timeMachine.printRecords();
+timeMachine.printRecords(['key', 'before', 'after']);
+```
