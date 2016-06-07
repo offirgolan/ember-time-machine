@@ -41,7 +41,7 @@
     "ember-composable-helpers": "0.26.0",
     "ember-data": "^2.5.0",
     "ember-disable-prototype-extensions": "^1.1.0",
-    "ember-drag-drop": "0.3.4",
+    "ember-drag-drop": "0.3.5",
     "ember-export-application-global": "^1.0.5",
     "ember-font-awesome": "2.1.1",
     "ember-keyboard": "1.1.0",
