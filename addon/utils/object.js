@@ -5,7 +5,8 @@ const {
   set,
   isNone,
   isArray,
-  isEmpty
+  isEmpty,
+  canInvoke
 } = Ember;
 
 export function getObject(obj, key) {
@@ -20,7 +21,8 @@ export function getObject(obj, key) {
     }
 
     if(isArray(o) && !isEmpty(k) && !isNaN(k)) {
-      o = o.objectAt(parseInt(k, 10));
+      let idx = parseInt(k, 10);
+      o = canInvoke(o, 'objectAt') ? o.objectAt(idx) : o[idx];
     } else {
       o = get(o, k);
     }

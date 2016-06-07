@@ -2,6 +2,10 @@ import Ember from 'ember';
 import TimeMachine from 'ember-time-machine';
 import { module, test } from 'qunit';
 
+const {
+  A: emberArray
+} = Ember;
+
 let tm, state, content, ignoredProperties;
 
 module('Unit | Proxy | array', {
@@ -226,4 +230,18 @@ test('ignoredProperties - nested', function(assert) {
 
   assert.equal(records.length, 2);
   assert.equal(state.get('cursor'), 1);
+});
+
+test('invoke', function(assert) {
+  assert.expect(2);
+
+  const Obj = Ember.Object.extend({
+    save() {
+      assert.ok(true);
+    }
+  });
+
+  content.setObjects(emberArray([Obj.create(), Obj.create()]));
+
+  tm.invoke('save');
 });

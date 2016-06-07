@@ -1,15 +1,21 @@
 import Ember from 'ember';
 import TimeMachine from 'ember-time-machine';
+import MachineStates from 'ember-time-machine/-private/machine-states';
 import { module, test } from 'qunit';
 
-let tm, state, content, ignoredProperties;
+const {
+  run
+} = Ember;
+
+let tm, state, content, ignoredProperties, frozenProperties;
 
 module('Unit | Proxy | object', {
   beforeEach() {
     ignoredProperties = Ember.A();
+    frozenProperties = Ember.A();
     content = Ember.Object.create();
     tm =  TimeMachine.Object.create({
-      content, ignoredProperties
+      content, ignoredProperties, frozenProperties
     });
 
     state = tm.get('_rootMachineState');
@@ -201,6 +207,55 @@ test('ignoredProperties - nested', function(assert) {
 
   assert.equal(records.length, 1);
   assert.equal(state.get('cursor'), 0);
+});
+
+test('frozenProperties - shallow', function(assert) {
+  const records = state.get('records');
+
+  frozenProperties.setObjects(['firstName']);
+
+  tm.set('firstName', 'Offir');
+
+  assert.equal(records.length, 0);
+  assert.equal(state.get('cursor'), -1);
+  assert.equal(content.get('firstName'), undefined);
+
+  tm.set('lastName', 'Golan');
+
+  assert.equal(records.length, 1);
+  assert.equal(state.get('cursor'), 0);
+  assert.equal(content.get('lastName'), 'Golan');
+});
+
+test('invoke', function(assert) {
+  assert.expect(2);
+  content.set('save', () => assert.ok(true));
+
+  tm.invoke('save');
+  tm.invoke('set', 'foo', 'bar');
+
+  assert.equal(content.get('foo'), 'bar');
+});
+
+test('destroy', function(assert) {
+  let obj = { foo: 'bar' };
+  content.set('foo', obj);
+
+  const availableMachines = state.get('availableMachines');
+  const fooMachine = tm.get('foo');
+
+  assert.ok(fooMachine.get('isTimeMachine'));
+  assert.ok(availableMachines.has(obj));
+  assert.ok(MachineStates.has(tm));
+
+  run(() => {
+    fooMachine.destroy();
+    tm.destroy();
+  });
+
+  assert.notOk(availableMachines.has(obj));
+  assert.notOk(MachineStates.has(tm));
+
 });
 
 test('general test', function(assert) {

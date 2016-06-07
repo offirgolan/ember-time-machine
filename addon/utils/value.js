@@ -12,7 +12,7 @@ export function wrapValue(obj, key, value) {
   const fullPath = obj.get('_path').concat(key);
   const maxDepth = state.get('maxDepth');
   const shouldTrack = maxDepth < 0 || fullPath.length <= maxDepth;
-  let machine;
+  let Machine, machine;
 
   if(availableMachines && availableMachines.has(value)) {
     return availableMachines.get(value);
@@ -20,18 +20,13 @@ export function wrapValue(obj, key, value) {
 
   if(value && shouldTrack && !get(value, 'isTimeMachine')) {
     if(isArray(value)) {
-      machine = TimeMachine.Array.create({
-        content: value,
-        _path: fullPath,
-        _rootMachine: obj.get('_rootMachine')
-      });
-
-      availableMachines.set(value, machine);
-      return machine;
+      Machine = TimeMachine.Array;
+    } else if(typeof value === 'object') {
+      Machine = TimeMachine.Object;
     }
 
-    if(typeof value === 'object') {
-      machine = TimeMachine.Object.create({
+    if(Machine) {
+      machine = Machine.create({
         content: value,
         _path: fullPath,
         _rootMachine: obj.get('_rootMachine')

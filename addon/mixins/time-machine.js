@@ -116,7 +116,7 @@ export default Ember.Mixin.create({
 
     const content = this.get('content');
     const rootMachine = this.get('_rootMachine');
-    const availableMachines = this.get('_rootMachineState').availableMachines;
+    const availableMachines = this.get('_rootMachineState.availableMachines');
 
     if(availableMachines.has(content)) {
       availableMachines.delete(content);
@@ -225,8 +225,8 @@ export default Ember.Mixin.create({
   invoke(methodName, ...args) {
     const content = this.get('content');
 
-    if(isArray(content) && this instanceof Ember.ArrayProxy) {
-      return this._super(...arguments);
+    if(isArray(content)) {
+      return emberArray(content).invoke(...arguments);
     } else {
       return tryInvoke(content, methodName, args);
     }
