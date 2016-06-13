@@ -46,7 +46,7 @@
     "ember-font-awesome": "2.1.1",
     "ember-keyboard": "1.1.0",
     "ember-load-initializers": "^0.5.1",
-    "ember-material-design-icons-shim": "0.1.6",
+    "ember-material-design-icons-shim": "0.1.8",
     "ember-materialize-shim": "0.1.7",
     "ember-modal-dialog": "0.8.4",
     "ember-new-computed": "1.0.3",
