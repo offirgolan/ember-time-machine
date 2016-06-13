@@ -6,7 +6,9 @@
 [![Test Coverage](https://codeclimate.com/github/offirgolan/ember-time-machine/badges/coverage.svg)](https://codeclimate.com/github/offirgolan/ember-time-machine/coverage)
 [![Dependency Status](https://david-dm.org/offirgolan/ember-time-machine.svg)](https://david-dm.org/offirgolan/ember-time-machine)
 
-An object state management solution
+Say you are building a form, what’s the best way to handle the state of an underlying model? How do you revert unwanted changes? Do you use a buffer or take snapshots? What if your model has relationships, and those relationships have relationships? 
+
+While Ember is a leading framework for building ambitious applications, it lacks the important ability to manage complex object state. Introducing Ember Time Machine, an addon that challenges this current issue and its limitations with a single command solution.
 
 ## Features
 
