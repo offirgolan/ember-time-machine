@@ -116,7 +116,7 @@ Properties that will not be modified. Supports nested keys including `@each`
 const content = Ember.Object.create({ array: Ember.A() });
 const frozenProperties = ['someProp', 'array', 'obj.array.@each.somProp'];
 
-const timeMachine = TimeMachine.Object.create({ content, ignoredProperties });
+const timeMachine = TimeMachine.Object.create({ content, frozenProperties });
 
 timeMachine.set('someProp', 'foo');
 timeMachine.get('someProp'); // --> undefined
