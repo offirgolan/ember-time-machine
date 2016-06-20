@@ -11,11 +11,15 @@
     "start": "ember server",
     "test": "ember try:testall"
   },
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/offirgolan/ember-time-machine.git"
+  },
   "engines": {
     "node": ">= 0.10.0"
   },
-  "author": "",
+  "author": "Offir Golan <offirgolan@gmail.com>",
+  "homepage": "https://github.com/offirgolan/ember-time-machine",
   "license": "MIT",
   "devDependencies": {
     "broccoli-asset-rev": "^2.4.2",
@@ -57,7 +61,8 @@
     "loader.js": "^4.0.1"
   },
   "keywords": [
-    "ember-addon"
+    "ember-addon",
+    "time-machine"
   ],
   "dependencies": {
     "ember-cli-babel": "^5.1.6",
