@@ -8,11 +8,12 @@
 /node_modules
 /bower_components
 
+# coverage
+/coverage
+
 # misc
 /.sass-cache
 /connect.lock
-/coverage/*
 /libpeerconnection.log
 npm-debug.log
 testem.log
-lcov.dat
