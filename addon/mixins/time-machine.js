@@ -52,6 +52,16 @@ export default Ember.Mixin.create({
   maxDepth: -1,
 
   /**
+   * Currently, any value of type `instance`, `object`, and `array` (via Ember.typeOf) will automatically
+   * be wrapped in their own Time Machine. If you don't want specific values to be wrapped,
+   * this is the place to do it.
+   *
+   * @property shouldWrapValue
+   * @type {Function}
+   */
+  shouldWrapValue: null,
+
+  /**
    * Path from root machine to this one
    *
    * @property _path
@@ -254,10 +264,8 @@ export default Ember.Mixin.create({
    */
   _setupMachine() {
     if(isNone(this.get('_rootMachine')) && !MachineStates.has(this)) {
+      const { ignoredProperties, frozenProperties,  maxDepth, shouldWrapValue } = this.getProperties(['ignoredProperties', 'frozenProperties', 'maxDepth', 'shouldWrapValue']);
       let availableMachines = new WeakMap();
-      let ignoredProperties = this.get('ignoredProperties');
-      let frozenProperties = this.get('frozenProperties');
-      let maxDepth = this.get('maxDepth');
 
       // Add root to the collection
       availableMachines.set(this.get('content'), this);
@@ -268,6 +276,7 @@ export default Ember.Mixin.create({
         records: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
         frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
+        shouldWrapValue: isNone(shouldWrapValue) ? () => true : shouldWrapValue,
         maxDepth,
         availableMachines
       }));
