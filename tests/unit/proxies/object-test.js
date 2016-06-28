@@ -237,6 +237,20 @@ test('invoke', function(assert) {
   assert.equal(content.get('foo'), 'bar');
 });
 
+test('shouldWrapValue', function(assert) {
+  class Foo {}
+
+  tm.set('foo', new Foo());
+  assert.ok(tm.get('foo').get('isTimeMachine'));
+
+  state.set('shouldWrapValue', (value) => {
+    return !(value instanceof Foo);
+  });
+
+  tm.set('foo', new Foo());
+  assert.ok(tm.get('foo') instanceof Foo);
+});
+
 test('destroy', function(assert) {
   let obj = { foo: 'bar' };
   content.set('foo', obj);
@@ -256,6 +270,22 @@ test('destroy', function(assert) {
   assert.notOk(availableMachines.has(obj));
   assert.notOk(MachineStates.has(tm));
 
+});
+
+test('general test - date', function(assert) {
+  content.set('date', '');
+
+  tm.set('date', new Date('1/1/01'));
+
+  assert.ok(tm.get('date') instanceof Date);
+  assert.equal(tm.get('date').getFullYear(), '2001');
+
+  tm.set('date', new Date('2/2/02'));
+  assert.equal(tm.get('date').getFullYear(), '2002');
+
+  tm.undo();
+
+  assert.equal(tm.get('date').getFullYear(), '2001');
 });
 
 test('general test', function(assert) {
