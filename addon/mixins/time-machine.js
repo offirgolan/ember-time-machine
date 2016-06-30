@@ -7,7 +7,6 @@ import { setObject } from 'ember-time-machine/utils/object';
 const {
   isNone,
   isArray,
-  isEmpty,
   computed,
   tryInvoke,
   Logger,
@@ -288,23 +287,6 @@ export default Ember.Mixin.create({
   },
 
   /**
-   * If the current index is not at the top of the stack, remove all records
-   * above it. This gets called before every record is added and is needed when
-   * undo is called then a record is added.
-   *
-   * @method _recalibrate
-   * @private
-   */
-  _recalibrate() {
-    const state = this.get('_rootMachineState');
-    const redoStack = state.get('redoStack');
-
-    if(!isEmpty(redoStack)) {
-      redoStack.setObjects([]);
-    }
-  },
-
-  /**
    * Apply the specified number of records given from either the undo or redo
    * stack
    *
@@ -391,8 +373,8 @@ export default Ember.Mixin.create({
     const state = this.get('_rootMachineState');
 
     if(!RecordUtils.pathInArray(state.get('ignoredProperties'), record.fullPath)) {
-      this._recalibrate();
       state.get('undoStack').pushObject(Object.freeze(record));
+      state.get('redoStack').setObjects([]);
     }
   }
 });

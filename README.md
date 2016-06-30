@@ -99,9 +99,10 @@ timeMachine.objectAt(1); // --> 'Golan'
 #### ignoredProperties ( _Array_ )
 
 Properties that will be ignored by the time machine. Supports nested keys including `@each`
+and `*`
 
 ```javascript
-const ignoredProperties = ['someProp', 'obj.array.@each.somProp'];
+const ignoredProperties = ['someProp', 'obj.array.@each.somProp', 'obj.array.@each.*.aProp'];
 
 const objectMachine = TimeMachine.Object.create({ content, ignoredProperties });
 
@@ -111,10 +112,11 @@ const arrayMachine = TimeMachine.Array.create({ content, ignoredProperties });
 #### frozenProperties ( _Array_ )
 
 Properties that will not be modified. Supports nested keys including `@each`
+and `*`
 
 ```javascript
 const content = Ember.Object.create({ array: Ember.A() });
-const frozenProperties = ['someProp', 'array', 'obj.array.@each.somProp'];
+const frozenProperties = ['someProp', 'array', 'obj.array.@each.somProp', 'obj.array.@each.*.aProp'];
 
 const timeMachine = TimeMachine.Object.create({ content, frozenProperties });
 
