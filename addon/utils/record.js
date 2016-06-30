@@ -4,7 +4,6 @@ export default {
     for(let i = 0; i < array.length; i++) {
       let regex = ('.' + array[i]).replace( new RegExp( /\.\*/, 'g' ), '\\.(\\w+)' ).replace( new RegExp( /\.@each/, 'g' ), '\\.(\\d+)' );
 
-      console.log(regex, path);
       if(('.' + path).match(regex)) {
         return true;
       }

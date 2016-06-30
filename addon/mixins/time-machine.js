@@ -7,6 +7,7 @@ import { setObject } from 'ember-time-machine/utils/object';
 const {
   isNone,
   isArray,
+  isEmpty,
   computed,
   tryInvoke,
   Logger,
@@ -371,10 +372,14 @@ export default Ember.Mixin.create({
    */
   _addRecord(record) {
     const state = this.get('_rootMachineState');
+    const redoStack = state.get('redoStack');
 
     if(!RecordUtils.pathInArray(state.get('ignoredProperties'), record.fullPath)) {
       state.get('undoStack').pushObject(Object.freeze(record));
-      state.get('redoStack').setObjects([]);
+
+      if(!isEmpty(redoStack)) {
+        redoStack.setObjects([]);
+      }
     }
   }
 });
