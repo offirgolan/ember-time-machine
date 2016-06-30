@@ -98,10 +98,7 @@ export default Ember.Mixin.create({
    * @property canUndo
    * @type {Boolean}
    */
-  canUndo: computed('_rootMachineState.records.[]', '_rootMachineState.cursor', function() {
-    const state = this.get('_rootMachineState');
-    return !isEmpty(state.get('records')) && state.get('cursor') > - 1;
-  }),
+  canUndo: computed.notEmpty('_rootMachineState.undoStack').readOnly(),
 
   /**
    * Determines if redo operations can be done
@@ -109,12 +106,7 @@ export default Ember.Mixin.create({
    * @property canRedo
    * @type {Boolean}
    */
-  canRedo: computed('_rootMachineState.records.[]', '_rootMachineState.cursor', function() {
-    const state = this.get('_rootMachineState');
-    const records = state.get('records');
-
-    return !isEmpty(records) && state.get('cursor') < records.length - 1;
-  }),
+  canRedo: computed.notEmpty('_rootMachineState.redoStack').readOnly(),
 
   init() {
     this._super(...arguments);
@@ -156,7 +148,8 @@ export default Ember.Mixin.create({
     let appliedRecords = [];
 
     if(this.get('canUndo')) {
-      appliedRecords = this._applyRecords('undo', state.get('cursor'), numUndos, options);
+      appliedRecords = this._applyRecords('undo', numUndos, options);
+      state.get('redoStack').pushObjects(appliedRecords);
     }
 
     return appliedRecords;
@@ -180,7 +173,8 @@ export default Ember.Mixin.create({
     let appliedRecords = [];
 
     if(this.get('canRedo')) {
-      appliedRecords =  this._applyRecords('redo', state.get('cursor') + 1, numRedos, options);
+      appliedRecords =  this._applyRecords('redo', numRedos, options);
+      state.get('undoStack').pushObjects(appliedRecords);
     }
 
     return appliedRecords;
@@ -196,7 +190,7 @@ export default Ember.Mixin.create({
    */
   undoAll(options = {}) {
     const state = this.get('_rootMachineState');
-    return this.undo(state.get('cursor') + 1, options);
+    return this.undo(state.get('undoStack.length'), options);
   },
 
   /**
@@ -209,7 +203,7 @@ export default Ember.Mixin.create({
    */
   redoAll(options = {}) {
     const state = this.get('_rootMachineState');
-    return this.redo(state.get('records.length') - state.get('cursor') - 1, options);
+    return this.redo(state.get('redoStack.length'), options);
   },
 
   /**
@@ -220,8 +214,8 @@ export default Ember.Mixin.create({
    */
   commit() {
     const state = this.get('_rootMachineState');
-    state.get('records').setObjects([]);
-    state.set('cursor', -1);
+    state.get('undoStack').setObjects([]);
+    state.get('redoStack').setObjects([]);
   },
 
   /**
@@ -250,8 +244,13 @@ export default Ember.Mixin.create({
    */
   printRecords(properties) {
     const state = this.get('_rootMachineState');
-    console.table(state.get('records'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp']);
-    Logger.debug('Cursor at index: ', state.get('cursor'));
+
+    Logger.debug('+====================================== Undo Stack ======================================+');
+    console.table(state.get('undoStack'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp']);
+    Logger.debug('+====================================== Redo Stack ======================================+');
+    console.table(state.get('redoStack'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp']);
+    Logger.debug('+========================================================================================+');
+
     Logger.debug('Content: ', this.get('content'));
   },
 
@@ -272,8 +271,8 @@ export default Ember.Mixin.create({
 
       // Create the new state that will be shared across all children of this content
       MachineStates.set(this, Ember.Object.create({
-        cursor: -1,
-        records: emberArray(),
+        undoStack: emberArray(),
+        redoStack: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
         frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
         shouldWrapValue: isNone(shouldWrapValue) ? () => true : shouldWrapValue,
@@ -298,40 +297,28 @@ export default Ember.Mixin.create({
    */
   _recalibrate() {
     const state = this.get('_rootMachineState');
-    const records = state.get('records');
-    let cursor = state.get('cursor');
+    const redoStack = state.get('redoStack');
 
-    if(cursor !== records.length - 1) {
-      const recordsToRemove = [];
-      cursor++;
-
-      for(; cursor < records.length; cursor++) {
-        recordsToRemove.push(records[cursor]);
-      }
-      records.removeObjects(recordsToRemove);
-      state.set('cursor', records.length - 1);
+    if(!isEmpty(redoStack)) {
+      redoStack.setObjects([]);
     }
   },
 
   /**
-   * Apply the specified number of records give the starting index
+   * Apply the specified number of records given from either the undo or redo
+   * stack
    *
    * @method _applyRecords
    * @param  {String}      type       'undo' or 'redo'
-   * @param  {Number}      startIndex The starting index
    * @param  {Number}      numRecords Number of records to apply
    * @param  {Object}      options
    * @return {Array}                  Records that were applied
    * @private
    */
-  _applyRecords(type /*, startIndex, numRecords, options = {} */) {
+  _applyRecords(type, numRecords, options = {}) {
     const state = this.get('_rootMachineState');
-    const records = state.get('records');
-    const cursor = state.get('cursor');
-
-    let extractedRecords = this._extractRecords(...arguments);
-    let direction = (type === 'undo' ? -1 : 1);
-    let insertAtIndex = cursor + 1;
+    const stack = state.get(`${type}Stack`);
+    let extractedRecords = this._extractRecords(stack, numRecords, options);
 
     extractedRecords.forEach((record, i) => {
       let nextRecord = extractedRecords.objectAt(i + 1);
@@ -358,48 +345,26 @@ export default Ember.Mixin.create({
       }
     });
 
-    /*
-      Flip the record order since undo operations are in reverse and reduce the
-      insert index by the extracted record length. This is because cursor will
-      always be greater than records.length due to the record extraction.
-     */
-    if(type === 'undo') {
-      insertAtIndex -= extractedRecords.length;
-      extractedRecords.reverseObjects();
-    }
-
-    records.splice(insertAtIndex, 0, ...extractedRecords);
-
-    state.incrementProperty('cursor', extractedRecords.length * direction);
-
     return extractedRecords;
   },
 
   /**
-   * Extract the specified number of records given the starting index and options
-   * from the root machine's record collection
+   * Extract the specified number of records from the given stack
    *
    * @method _extractRecords
    * @param  {String}      type       'undo' or 'redo'
-   * @param  {Number}      startIndex The starting index
    * @param  {Number}      numRecords Number of records to apply
    * @param  {Object}      options
    * @return {Array}                  Records that were extracted
    * @private
    */
-  _extractRecords(type, startIndex, numRecords, options = {}) {
-    const state = this.get('_rootMachineState');
-    const records = state.get('records');
-
+  _extractRecords(stack, numRecords, options = {}) {
     const whitelist = options.on;
     const blacklist = options.excludes;
-
     let extractedRecords = [];
-    let cursor = startIndex;
-    let direction = (type === 'undo' ? -1 : 1);
 
-    for(let i = 0; i < numRecords && cursor > -1 && cursor < records.length; cursor += direction) {
-      let record = records.objectAt(cursor);
+    for(let i = stack.length - 1; i >= 0 && extractedRecords.length < numRecords; i--) {
+      let record = stack.objectAt(i);
 
       if(isNone(record) ||
          (isArray(whitelist) && !RecordUtils.pathInArray(whitelist, record.fullPath)) ||
@@ -408,10 +373,10 @@ export default Ember.Mixin.create({
       }
 
       extractedRecords.push(record);
-      i++;
     }
 
-    records.removeObjects(extractedRecords);
+    stack.removeObjects(extractedRecords);
+
     return emberArray(extractedRecords);
   },
 
@@ -427,8 +392,7 @@ export default Ember.Mixin.create({
 
     if(!RecordUtils.pathInArray(state.get('ignoredProperties'), record.fullPath)) {
       this._recalibrate();
-      state.get('records').pushObject(Object.freeze(record));
-      state.incrementProperty('cursor');
+      state.get('undoStack').pushObject(Object.freeze(record));
     }
   }
 });
