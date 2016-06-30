@@ -7,30 +7,31 @@ const {
   run
 } = Ember;
 
-let tm, state, content, ignoredProperties, frozenProperties;
+let tm, state, content, undoStack, redoStack;
+let ignoredProperties, frozenProperties;
 
 module('Unit | Proxy | object', {
   beforeEach() {
     ignoredProperties = Ember.A();
     frozenProperties = Ember.A();
     content = Ember.Object.create();
+
     tm =  TimeMachine.Object.create({
       content, ignoredProperties, frozenProperties
     });
 
     state = tm.get('_rootMachineState');
+    undoStack = state.get('undoStack');
+    redoStack = state.get('redoStack');
   }
 });
 
 test('single change detected', function(assert) {
-  const records = state.get('records');
-
   tm.set('firstName', 'Offir');
 
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
 
-  let record = records[0];
+  let record = undoStack[0];
 
   assert.equal(record.type, 'ADD');
   assert.equal(record.before, undefined);
@@ -38,36 +39,28 @@ test('single change detected', function(assert) {
 });
 
 test('multiple changes detected', function(assert) {
-  const records = state.get('records');
-
   for(let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
   }
 
-  assert.equal(records.length, 20);
-  assert.equal(state.get('cursor'), 19);
+  assert.equal(undoStack.length, 20);
 });
 
 test('undo single change', function(assert) {
-  const records = state.get('records');
-
   tm.set('firstName', 'Offir');
 
   assert.equal(tm.get('firstName'), 'Offir');
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
 
   tm.undo();
 
   assert.equal(tm.get('firstName'), undefined);
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), -1);
+  assert.equal(redoStack.length, 1);
+  assert.equal(undoStack.length, 0);
 });
 
 test('undo all changes', function(assert) {
-  const records = state.get('records');
-
   for(let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
@@ -75,42 +68,36 @@ test('undo all changes', function(assert) {
 
   assert.equal(tm.get('number'), 10);
   assert.equal(tm.get('squared'), 100);
-  assert.equal(records.length, 20);
-  assert.equal(state.get('cursor'), 19);
+  assert.equal(undoStack.length, 20);
 
   tm.undoAll();
 
   assert.equal(tm.get('number'), undefined);
   assert.equal(tm.get('squared'), undefined);
-  assert.equal(records.length, 20);
-  assert.equal(state.get('cursor'), -1);
+  assert.equal(redoStack.length, 20);
+  assert.equal(undoStack.length, 0);
 });
 
 test('undo and redo single change', function(assert) {
-  const records = state.get('records');
-
   tm.set('firstName', 'Offir');
 
   assert.equal(tm.get('firstName'), 'Offir');
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
 
   tm.undo();
 
   assert.equal(tm.get('firstName'), undefined);
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), -1);
+  assert.equal(undoStack.length, 0);
+  assert.equal(redoStack.length, 1);
 
   tm.redo();
 
   assert.equal(tm.get('firstName'), 'Offir');
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
+  assert.equal(redoStack.length, 0);
 });
 
 test('undo and redo all changes', function(assert) {
-  const records = state.get('records');
-
   for(let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
@@ -118,112 +105,91 @@ test('undo and redo all changes', function(assert) {
 
   assert.equal(tm.get('number'), 10);
   assert.equal(tm.get('squared'), 100);
-  assert.equal(records.length, 20);
-  assert.equal(state.get('cursor'), 19);
+  assert.equal(undoStack.length, 20);
 
   tm.undoAll();
 
   assert.equal(tm.get('number'), undefined);
   assert.equal(tm.get('squared'), undefined);
-  assert.equal(records.length, 20);
-  assert.equal(state.get('cursor'), -1);
+  assert.equal(redoStack.length, 20);
+  assert.equal(undoStack.length, 0);
 
   tm.redoAll();
 
   assert.equal(tm.get('number'), 10);
   assert.equal(tm.get('squared'), 100);
-  assert.equal(records.length, 20);
-  assert.equal(state.get('cursor'), 19);
+  assert.equal(redoStack.length, 0);
+  assert.equal(undoStack.length, 20);
 });
 
 test('commit', function(assert) {
-  const records = state.get('records');
-
   for(let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
   }
 
-  assert.equal(records.length, 20);
-  assert.equal(state.get('cursor'), 19);
+  assert.equal(undoStack.length, 20);
 
   tm.commit();
 
-  assert.equal(records.length, 0);
-  assert.equal(state.get('cursor'), -1);
+  assert.equal(undoStack.length, 0);
 });
 
 test('recalibration', function(assert) {
-  const records = state.get('records');
-
   tm.set('firstName', 'Offir');
   tm.set('lastName', 'Golan');
 
   assert.equal(tm.get('lastName'), 'Golan');
-  assert.equal(records.length, 2);
-  assert.equal(state.get('cursor'), 1);
+  assert.equal(undoStack.length, 2);
 
   tm.undo();
 
   assert.equal(tm.get('lastName'), undefined);
-  assert.equal(records.length, 2);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(redoStack.length, 1);
+  assert.equal(undoStack.length, 1);
 
   tm.set('lastName', 'G');
 
   assert.equal(tm.get('lastName'), 'G');
-  assert.equal(records.length, 2);
-  assert.equal(state.get('cursor'), 1);
+  assert.equal(redoStack.length, 0);
 });
 
 test('ignoredProperties - shallow', function(assert) {
-  const records = state.get('records');
-
   ignoredProperties.setObjects(['lastName']);
 
   tm.set('firstName', 'Offir');
 
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
 
   tm.set('lastName', 'Golan');
 
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
 });
 
 test('ignoredProperties - nested', function(assert) {
-  const records = state.get('records');
-
   content.set('user', Ember.Object.create());
   ignoredProperties.setObjects(['user.lastName']);
 
   tm.set('user.firstName', 'Offir');
 
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
 
   tm.set('user.lastName', 'Golan');
 
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
 });
 
 test('frozenProperties - shallow', function(assert) {
-  const records = state.get('records');
-
   frozenProperties.setObjects(['firstName']);
 
   tm.set('firstName', 'Offir');
 
-  assert.equal(records.length, 0);
-  assert.equal(state.get('cursor'), -1);
+  assert.equal(undoStack.length, 0);
   assert.equal(content.get('firstName'), undefined);
 
   tm.set('lastName', 'Golan');
 
-  assert.equal(records.length, 1);
-  assert.equal(state.get('cursor'), 0);
+  assert.equal(undoStack.length, 1);
   assert.equal(content.get('lastName'), 'Golan');
 });
 
