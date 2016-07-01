@@ -1,8 +1,10 @@
 export default {
   pathInArray(array = [], path = '') {
+
     for(let i = 0; i < array.length; i++) {
-      // object.array.@each.array.@each.prop === object.array.1.array.2.prop
-      if(array[i] === path.replace(new RegExp(/\d+\./, 'g'), '@each.')) {
+      let regex = ('.' + array[i]).replace( new RegExp( /\.\*/, 'g' ), '\\.(\\w+)' ).replace( new RegExp( /\.@each/, 'g' ), '\\.(\\d+)' );
+
+      if(('.' + path).match(regex)) {
         return true;
       }
     }

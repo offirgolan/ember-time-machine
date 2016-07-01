@@ -288,23 +288,6 @@ export default Ember.Mixin.create({
   },
 
   /**
-   * If the current index is not at the top of the stack, remove all records
-   * above it. This gets called before every record is added and is needed when
-   * undo is called then a record is added.
-   *
-   * @method _recalibrate
-   * @private
-   */
-  _recalibrate() {
-    const state = this.get('_rootMachineState');
-    const redoStack = state.get('redoStack');
-
-    if(!isEmpty(redoStack)) {
-      redoStack.setObjects([]);
-    }
-  },
-
-  /**
    * Apply the specified number of records given from either the undo or redo
    * stack
    *
@@ -389,10 +372,14 @@ export default Ember.Mixin.create({
    */
   _addRecord(record) {
     const state = this.get('_rootMachineState');
+    const redoStack = state.get('redoStack');
 
     if(!RecordUtils.pathInArray(state.get('ignoredProperties'), record.fullPath)) {
-      this._recalibrate();
       state.get('undoStack').pushObject(Object.freeze(record));
+
+      if(!isEmpty(redoStack)) {
+        redoStack.setObjects([]);
+      }
     }
   }
 });
