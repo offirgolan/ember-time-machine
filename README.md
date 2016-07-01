@@ -157,7 +157,7 @@ _Params:_
   - key ( __String__ ): The object's key that the value came from
 
 ```javascript
-const shouldWrapValue = function(value, timeMachine, key) {
+const shouldWrapValue = (value, timeMachine, key) => {
   return !(value instanceof moment) || key.indexOf('foo') !== -1;
 }
 
