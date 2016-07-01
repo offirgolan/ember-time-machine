@@ -147,14 +147,14 @@ const objectMachine = TimeMachine.Object.create({ content,  maxDepth: 2 });
 
 #### shouldWrapValue ( _Function_ )
 
+Currently, any value of type `instance`, `object`, and `array` (via Ember.typeOf) will automatically be wrapped in their
+own Time Machine. If you don't want specific values to be wrapped, this is the place to do it.
+
 _Params:_
 
   - value ( __Unknown__ ): The value that will be wrapped
   - timeMachine ( __TimeMachine__ ): The current Time Machine that this value belongs under
   - key ( __String__ ): The object's key that the value came from
-
-Currently, any value of type `instance`, `object`, and `array` (via Ember.typeOf) will automatically be wrapped in their
-own Time Machine. If you don't want specific values to be wrapped, this is the place to do it.
 
 ```javascript
 const shouldWrapValue = function(value, timeMachine, key) {
