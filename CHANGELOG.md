@@ -1,6 +1,13 @@
 Changelog
 =========
 
+## v0.0.3
+
+### Pull Requests
+
+- [#27](https://github.com/offirgolan/ember-time-machine/pull/27)  Refactor to use undo and redo stacks  *by [Offir Golan](https://github.com/offirgolan)*
+- [#28](https://github.com/offirgolan/ember-time-machine/pull/28)  Wildcard support  *by [Offir Golan](https://github.com/offirgolan)* - Special thanks to *[@spikedkira](https://github.com/spikedkira)*
+
 ## v0.0.2
 
 ### Pull Requests
