@@ -49,7 +49,7 @@
     "ember-drag-drop": "0.3.6",
     "ember-export-application-global": "^1.0.5",
     "ember-font-awesome": "2.1.1",
-    "ember-keyboard": "1.1.0",
+    "ember-keyboard": "2.0.0",
     "ember-load-initializers": "^0.5.1",
     "ember-material-design-icons-shim": "0.1.8",
     "ember-materialize-shim": "0.1.8",
