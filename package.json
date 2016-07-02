@@ -52,7 +52,7 @@
     "ember-keyboard": "2.0.0",
     "ember-load-initializers": "^0.5.1",
     "ember-material-design-icons-shim": "0.1.8",
-    "ember-materialize-shim": "0.1.8",
+    "ember-materialize-shim": "0.1.9",
     "ember-modal-dialog": "0.8.5",
     "ember-new-computed": "1.0.3",
     "ember-radio-button": "1.0.7",
