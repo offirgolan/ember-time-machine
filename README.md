@@ -28,7 +28,9 @@ ember install ember-time-machine
 ## Helpful Links
 
 - ### [Live Demo](http://offirgolan.github.io/ember-time-machine)
-- ### [[Documentation](https://github.com/offirgolan/ember-time-machine/wiki)
+
+- ### [Documentation](https://github.com/offirgolan/ember-time-machine/wiki)
+
 - ### [Changelog](CHANGELOG.md)
 
 ## Looking for help?
