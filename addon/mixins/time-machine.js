@@ -3,6 +3,7 @@ import WeakMap from 'ember-weakmap';
 import MachineStates from 'ember-time-machine/-private/machine-states';
 import RecordUtils from 'ember-time-machine/utils/record';
 import { setObject } from 'ember-time-machine/utils/object';
+import { pathInGlobs } from 'ember-time-machine/utils/utils';
 
 const {
   isNone,
@@ -173,7 +174,7 @@ export default Ember.Mixin.create({
     let appliedRecords = [];
 
     if(this.get('canRedo')) {
-      appliedRecords =  this._applyRecords('redo', numRedos, options);
+      appliedRecords = this._applyRecords('redo', numRedos, options);
       state.get('undoStack').pushObjects(appliedRecords);
     }
 
@@ -350,8 +351,8 @@ export default Ember.Mixin.create({
       let record = stack.objectAt(i);
 
       if(isNone(record) ||
-         (isArray(whitelist) && !RecordUtils.pathInArray(whitelist, record.fullPath)) ||
-         (isArray(blacklist) && RecordUtils.pathInArray(blacklist, record.fullPath))) {
+         (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
+         (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist))) {
         continue;
       }
 
@@ -374,7 +375,7 @@ export default Ember.Mixin.create({
     const state = this.get('_rootMachineState');
     const redoStack = state.get('redoStack');
 
-    if(!RecordUtils.pathInArray(state.get('ignoredProperties'), record.fullPath)) {
+    if(!pathInGlobs(record.fullPath, state.get('ignoredProperties'))) {
       state.get('undoStack').pushObject(Object.freeze(record));
 
       if(!isEmpty(redoStack)) {
