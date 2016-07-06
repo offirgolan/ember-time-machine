@@ -70,6 +70,7 @@ timeMachine.set('username', 'offir.golan');
 
 /** Nested Array Manipulations **/
 timeMachine.get('tasks').setEach('isCompleted', true);
+timeMachine.get('tasks').pushObject(this.store.createRecord('task'));
 
 /** Nested Object Manipulations **/
 timeMachine.set('settings.newOnTop', false);
@@ -79,6 +80,7 @@ __Time Travel__
 
 ```js
 timeMachine.undo(1, { on : [ 'username' ] }); // Undo the last username change
+timeMachine.undo(1, { on : [ 'tasks' ] }); // Undo the last tasks change. This will undo the newly added task via pushObject
 timeMachine.undo(2, { on: [ 'tasks.@each.isCompleted' ] }); // Undo the last 2 isCompleted changes on the tasks collection
 timeMachine.undoAll({ on: [ 'settings.*' ] }); // Undo all changes on the settings object
 timeMachine.undoAll(); // Undo all changes
