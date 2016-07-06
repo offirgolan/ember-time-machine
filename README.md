@@ -12,7 +12,6 @@ While Ember is a leading framework for building ambitious applications, it lacks
 
 ## Features
 
-- Single line of code to start
 - Support for both Ember Objects and Arrays, as well as, Ember Data models
 - Tracks nested relational changes out of the box (including `hasMany` and `belongsTo` relationships)
 - Ability to revert array manipulations as well as object property changes
