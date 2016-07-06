@@ -38,60 +38,52 @@ If it is a bug [please open an issue on GitHub](http://github.com/offirgolan/emb
 
 ## Usage
 
-### Objects
+_**Note:** Ember Time Machine can be used with plain objects and arrays. This example is used to show the true potential of this addon_
 
-__Setup__
+```js
+// models/user.js
+export default DS.Model.extend({
+  firstName: attr('string'),
+  lastName: attr('string'),
+  username: attr('string'),
+  avatar: attr('string'),
 
-```javascript
-import TimeMachine from 'ember-time-machine';
-
-const content = Ember.Object.create({
-  firstName: 'Offir'
+  settings: DS.belongsTo('setting'),
+  tasks: DS.hasMany('task')
 });
-
-const timeMachine = TimeMachine.Object.create({ content });
 ```
-
-__Manipulate__
-
-```javascript
-timeMachine.get('firstName'); // --> 'Offir'
-timeMachine.set('lastName', 'Golan');
-```
-
-__Undo & Redo__
-
-```javascript
-timeMachine.get('lastName'); // --> 'Golan'
-timeMachine.undo();
-timeMachine.get('lastName'); // --> undefined
-timeMachine.redo();
-timeMachine.get('lastName'); // --> 'Golan'
-```
-
-### Arrays
 
 __Setup__
 
-```javascript
+```js
 import TimeMachine from 'ember-time-machine';
 
-const timeMachine = TimeMachine.Array.create({ content: Ember.A([ 'offir' ]) });
+const user = this.store.peekRecord('user', 1);
+
+const timeMachine = TimeMachine.Object.create({ content: user });
 ```
 
 __Manipulate__
 
 ```javascript
-timeMachine.get('firstObject'); // --> 'Offir'
-timeMachine.pushObject('Golan');
+/** Basic Manipulations **/
+timeMachine.set('username', 'offir.golan');
+
+/** Nested Array Manipulations **/
+timeMachine.get('tasks').setEach('isCompleted', true);
+
+/** Nested Object Manipulations **/
+timeMachine.set('settings.newOnTop', false);
 ```
 
-__Undo & Redo__
+__Time Travel__
 
-```javascript
-timeMachine.objectAt(1); // --> 'Golan'
-timeMachine.undo();
-timeMachine.objectAt(1); // --> undefined
-timeMachine.redo();
-timeMachine.objectAt(1); // --> 'Golan'
+```js
+timeMachine.undo(1, { on : [ 'username' ] }); // Undo the last username change
+timeMachine.undo(2, { on: [ 'tasks.@each.isCompleted' ] }); // Undo the last 2 isCompleted changes on the tasks collection
+timeMachine.undoAll({ on: [ 'settings.*' ] }); // Undo all changes on the settings object
+timeMachine.undoAll(); // Undo all changes
+
+timeMachine.redo(1, { on : [ 'username' ] }); // Redo the last undone change to username
+timeMachine.redoAll(); // Redo all changes that have been undone
 ```
