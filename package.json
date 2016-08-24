@@ -48,7 +48,7 @@
     "ember-disable-prototype-extensions": "^1.1.0",
     "ember-drag-drop": "0.3.7",
     "ember-export-application-global": "^1.0.5",
-    "ember-font-awesome": "2.1.1",
+    "ember-font-awesome": "2.2.0",
     "ember-keyboard": "2.1.1",
     "ember-load-initializers": "^0.5.1",
     "ember-material-design-icons-shim": "0.1.9",
