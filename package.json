@@ -22,7 +22,7 @@
   "homepage": "https://github.com/offirgolan/ember-time-machine",
   "license": "MIT",
   "devDependencies": {
-    "broccoli-asset-rev": "^2.4.2",
+    "broccoli-asset-rev": "^2.5.0",
     "ember-ajax": "2.5.1",
     "ember-cli": "2.6.3",
     "ember-cli-app-version": "^2.0.0",
