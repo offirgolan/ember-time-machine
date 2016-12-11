@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## v0.0.4
+
+- Dependency upgrades for Ember 2.10 support
+
 ## v0.0.3
 
 ### Pull Requests
