@@ -5,10 +5,10 @@ export function requireModule(module) {
 }
 
 export function pathInGlobs(path = '', globs = []) {
-  for(let i = 0; i < globs.length; i++) {
-    let regex = ('.' + globs[i]).replace( new RegExp( /\.\*/, 'g' ), '\\.(\\w+)' ).replace( new RegExp( /\.@each/, 'g' ), '\\.(\\d+)' );
+  for (let i = 0; i < globs.length; i++) {
+    let regex = (`.${globs[i]}`).replace(new RegExp(/\.\*/, 'g'), '\\.(\\w+)').replace(new RegExp(/\.@each/, 'g'), '\\.(\\d+)');
 
-    if(('.' + path).match(regex)) {
+    if ((`.${path}`).match(regex)) {
       return true;
     }
   }

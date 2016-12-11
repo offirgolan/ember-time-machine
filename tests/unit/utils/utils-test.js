@@ -10,7 +10,7 @@ test('pathInGlobs - simple', function(assert) {
   assert.equal(pathInGlobs('foo.bar.baz', ['foo.bar.baz']), true);
 });
 
-test('pathInGlobs - @each', function(assert) {
+test('pathInGlobs - each', function(assert) {
   assert.equal(pathInGlobs('a.b.2.c', ['a.b.@each.c']), true);
   assert.equal(pathInGlobs('a.b.1.b', ['a.b.@each.c']), false);
   assert.equal(pathInGlobs('a.b.d.c', ['a.b.@each.c']), false);

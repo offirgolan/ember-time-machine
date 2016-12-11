@@ -4,5 +4,5 @@ const { attr } = DS;
 
 export default DS.Model.extend({
   title: attr('string'),
-  isCompleted: attr('boolean', { defaultValue: false }),
+  isCompleted: attr('boolean', { defaultValue: false })
 });

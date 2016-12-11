@@ -11,7 +11,6 @@ export default Ember.Route.extend({
 
     controller.set('model', TimeMachine.Object.create({
       content: model,
-      frozenProperties: ['username'],
       ignoredProperties: ['tasks.@each.isDraggingObject', 'tasks.@each.isEditing']
     }));
   }

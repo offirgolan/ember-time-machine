@@ -8,8 +8,11 @@ export default Ember.Controller.extend({
 
   actions: {
     addTask() {
-      const newTask = this.get('store').createRecord('task', { title: this.get('newTask') });
-      if(this.get('model.settings.newOnTop')) {
+      let newTask = this.get('store').createRecord('task', {
+        title: this.get('newTask')
+      });
+
+      if (this.get('model.settings.newOnTop')) {
         this.get('model.tasks').insertAt(0, newTask);
       } else {
         this.get('model.tasks').pushObject(newTask);

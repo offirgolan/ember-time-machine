@@ -10,12 +10,12 @@ export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
   },
 
   replaceContent(startIndex, numRemoved, objects) {
-    const state = this.get('_rootMachineState');
-    const path = this.get('_path');
+    let state = this.get('_rootMachineState');
+    let path = this.get('_path');
     let before, after;
 
-    if(state && !pathInGlobs(path.join('.'), state.get('frozenProperties'))) {
-      if(numRemoved > 0) {
+    if (state && !pathInGlobs(path.join('.'), state.get('frozenProperties'))) {
+      if (numRemoved > 0) {
         before = this.slice(startIndex, startIndex + numRemoved);
       } else {
         after = objects;

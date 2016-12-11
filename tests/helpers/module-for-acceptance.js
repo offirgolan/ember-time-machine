@@ -1,3 +1,4 @@
+// jscs: disable
 import { module } from 'qunit';
 import Ember from 'ember';
 import startApp from '../helpers/start-app';
@@ -21,3 +22,4 @@ export default function(name, options = {}) {
     }
   });
 }
+// jscs: enable

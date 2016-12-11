@@ -10,21 +10,21 @@ const {
 } = Ember;
 
 export function getObject(obj, key) {
-  const path = key.toString().split('.');
+  let path = key.toString().split('.');
   let o = obj;
 
-  for(let i = 0; i < path.length; i++) {
-    const k = path[i];
+  for (let i = 0; i < path.length; i++) {
+    let k = path[i];
 
-    if(isNone(o)) {
+    if (isNone(o)) {
       break;
     }
 
-    if(isArray(o) && !isEmpty(k) && !isNaN(k)) {
+    if (isArray(o) && !isEmpty(k) && !isNaN(k)) {
       let idx = parseInt(k, 10);
       o = canInvoke(o, 'objectAt') ? o.objectAt(idx) : o[idx];
     } else {
-      o = get(o, k);
+      o = isEmpty(k) ? o : get(o, k);
     }
   }
 
@@ -38,7 +38,7 @@ export function setObject(obj, key, value) {
   path = path.slice(0, path.length - 1);
   let o = getObject(obj, path.join('.'));
 
-  if(o) {
+  if (o) {
     return set(o, property, value);
   }
 }

@@ -89,9 +89,8 @@ export default Ember.Mixin.create({
    * @private
    */
   _rootMachineState: computed('_rootMachine', function() {
-      return MachineStates.get(this.get('_rootMachine'));
+    return MachineStates.get(this.get('_rootMachine'));
   }).readOnly(),
-
 
   /**
    * Determines if undo operations can be done
@@ -117,15 +116,15 @@ export default Ember.Mixin.create({
   destroy() {
     this._super(...arguments);
 
-    const content = this.get('content');
-    const rootMachine = this.get('_rootMachine');
-    const availableMachines = this.get('_rootMachineState.availableMachines');
+    let content = this.get('content');
+    let rootMachine = this.get('_rootMachine');
+    let availableMachines = this.get('_rootMachineState.availableMachines');
 
-    if(availableMachines.has(content)) {
+    if (availableMachines.has(content)) {
       availableMachines.delete(content);
     }
 
-    if(rootMachine === this) {
+    if (rootMachine === this) {
       MachineStates.delete(this);
     }
   },
@@ -145,10 +144,10 @@ export default Ember.Mixin.create({
    * @return {Array}  All records that were undone
    */
   undo(numUndos = 1, options = {}) {
-    const state = this.get('_rootMachineState');
+    let state = this.get('_rootMachineState');
     let appliedRecords = [];
 
-    if(this.get('canUndo')) {
+    if (this.get('canUndo')) {
       appliedRecords = this._applyRecords('undo', numUndos, options);
       state.get('redoStack').pushObjects(appliedRecords);
     }
@@ -170,10 +169,10 @@ export default Ember.Mixin.create({
    * @return {Array}  All records that were redone
    */
   redo(numRedos = 1, options = {}) {
-    const state = this.get('_rootMachineState');
+    let state = this.get('_rootMachineState');
     let appliedRecords = [];
 
-    if(this.get('canRedo')) {
+    if (this.get('canRedo')) {
       appliedRecords = this._applyRecords('redo', numRedos, options);
       state.get('undoStack').pushObjects(appliedRecords);
     }
@@ -190,7 +189,7 @@ export default Ember.Mixin.create({
    * @return {Array}  All records that were undone
    */
   undoAll(options = {}) {
-    const state = this.get('_rootMachineState');
+    let state = this.get('_rootMachineState');
     return this.undo(state.get('undoStack.length'), options);
   },
 
@@ -203,7 +202,7 @@ export default Ember.Mixin.create({
    * @return {Array}  All records that were redone
    */
   redoAll(options = {}) {
-    const state = this.get('_rootMachineState');
+    let state = this.get('_rootMachineState');
     return this.redo(state.get('redoStack.length'), options);
   },
 
@@ -214,7 +213,7 @@ export default Ember.Mixin.create({
    * @method commit
    */
   commit() {
-    const state = this.get('_rootMachineState');
+    let state = this.get('_rootMachineState');
     state.get('undoStack').setObjects([]);
     state.get('redoStack').setObjects([]);
   },
@@ -228,9 +227,9 @@ export default Ember.Mixin.create({
    * @return {Unknown} return values from calling invoke.
    */
   invoke(methodName, ...args) {
-    const content = this.get('content');
+    let content = this.get('content');
 
-    if(isArray(content)) {
+    if (isArray(content)) {
       return emberArray(content).invoke(...arguments);
     } else {
       return tryInvoke(content, methodName, args);
@@ -244,7 +243,7 @@ export default Ember.Mixin.create({
    * @param {Array} properties override the properties to display
    */
   printRecords(properties) {
-    const state = this.get('_rootMachineState');
+    let state = this.get('_rootMachineState');
 
     Logger.debug('+====================================== Undo Stack ======================================+');
     console.table(state.get('undoStack'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp']);
@@ -263,8 +262,13 @@ export default Ember.Mixin.create({
    * @private
    */
   _setupMachine() {
-    if(isNone(this.get('_rootMachine')) && !MachineStates.has(this)) {
-      const { ignoredProperties, frozenProperties,  maxDepth, shouldWrapValue } = this.getProperties(['ignoredProperties', 'frozenProperties', 'maxDepth', 'shouldWrapValue']);
+    if (isNone(this.get('_rootMachine')) && !MachineStates.has(this)) {
+      let {
+        ignoredProperties,
+        frozenProperties,
+        maxDepth,
+        shouldWrapValue
+      } = this.getProperties(['ignoredProperties', 'frozenProperties', 'maxDepth', 'shouldWrapValue']);
       let availableMachines = new WeakMap();
 
       // Add root to the collection
@@ -300,8 +304,8 @@ export default Ember.Mixin.create({
    * @private
    */
   _applyRecords(type, numRecords, options = {}) {
-    const state = this.get('_rootMachineState');
-    const stack = state.get(`${type}Stack`);
+    let state = this.get('_rootMachineState');
+    let stack = state.get(`${type}Stack`);
     let extractedRecords = this._extractRecords(stack, numRecords, options);
 
     extractedRecords.forEach((record, i) => {
@@ -313,13 +317,13 @@ export default Ember.Mixin.create({
         more expensive to clone the array, do the operations on the clone, then
         apply the updated cloned array on the target.
        */
-      if(record.isArray) {
-        if(type === 'undo') {
+      if (record.isArray) {
+        if (type === 'undo') {
           RecordUtils.undoArrayRecord(record);
         } else {
           RecordUtils.redoArrayRecord(record);
         }
-      } else if(isLast || record.fullPath !== nextRecord.fullPath) {
+      } else if (isLast || record.fullPath !== nextRecord.fullPath) {
         /*
           Apply the last object property change that occured in a row.
           ex) If firstName changed 5 times in a row and we undo, then apply only
@@ -343,16 +347,16 @@ export default Ember.Mixin.create({
    * @private
    */
   _extractRecords(stack, numRecords, options = {}) {
-    const whitelist = options.on;
-    const blacklist = options.excludes;
+    let whitelist = options.on;
+    let blacklist = options.excludes;
     let extractedRecords = [];
 
-    for(let i = stack.length - 1; i >= 0 && extractedRecords.length < numRecords; i--) {
+    for (let i = stack.length - 1; i >= 0 && extractedRecords.length < numRecords; i--) {
       let record = stack.objectAt(i);
 
-      if(isNone(record) ||
-         (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
-         (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist))) {
+      if (isNone(record) ||
+        (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
+        (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist))) {
         continue;
       }
 
@@ -372,13 +376,13 @@ export default Ember.Mixin.create({
    * @param  {Record}   record
    */
   _addRecord(record) {
-    const state = this.get('_rootMachineState');
-    const redoStack = state.get('redoStack');
+    let state = this.get('_rootMachineState');
+    let redoStack = state.get('redoStack');
 
-    if(!pathInGlobs(record.fullPath, state.get('ignoredProperties'))) {
+    if (!pathInGlobs(record.fullPath, state.get('ignoredProperties'))) {
       state.get('undoStack').pushObject(Object.freeze(record));
 
-      if(!isEmpty(redoStack)) {
+      if (!isEmpty(redoStack)) {
         redoStack.setObjects([]);
       }
     }

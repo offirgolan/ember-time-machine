@@ -61,7 +61,6 @@ test('getObject - ember array proxy', function(assert) {
   assert.notOk(getObject(arrayProxy, 'proxy.10.ten'));
 });
 
-
 test('setObject', function(assert) {
   setObject(root, 'a.foo', 'bar');
   assert.equal(getObject(root, 'a.foo'), 'bar');

@@ -15,8 +15,10 @@ module('Unit | Proxy | array', {
     frozenProperties = Ember.A();
     content = Ember.A();
 
-    tm =  TimeMachine.Array.create({
-      content, ignoredProperties, frozenProperties
+    tm = TimeMachine.Array.create({
+      content,
+      ignoredProperties,
+      frozenProperties
     });
 
     state = tm.get('_rootMachineState');
@@ -25,13 +27,12 @@ module('Unit | Proxy | array', {
   }
 });
 
-
 test('single change detected', function(assert) {
   tm.pushObject('Offir');
 
   assert.equal(undoStack.length, 1);
 
-  let record = undoStack[0];
+  let [record] = undoStack;
 
   assert.equal(record.type, 'ADD');
   assert.equal(record.isArray, true);
@@ -40,7 +41,7 @@ test('single change detected', function(assert) {
 });
 
 test('multiple changes detected', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.pushObject(i);
   }
 
@@ -76,7 +77,7 @@ test('undo single change - DELETE', function(assert) {
 });
 
 test('undo all changes', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.pushObject(i);
   }
 
@@ -131,7 +132,7 @@ test('undo and redo single change - DELETE', function(assert) {
 });
 
 test('undo and redo all changes', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.pushObject(i);
   }
 
@@ -152,7 +153,7 @@ test('undo and redo all changes', function(assert) {
 });
 
 test('commit', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.pushObject(i);
   }
 
@@ -203,7 +204,7 @@ test('ignoredProperties - nested', function(assert) {
 test('invoke', function(assert) {
   assert.expect(2);
 
-  const Obj = Ember.Object.extend({
+  let Obj = Ember.Object.extend({
     save() {
       assert.ok(true);
     }

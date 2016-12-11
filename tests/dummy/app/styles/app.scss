@@ -65,6 +65,18 @@ nav {
       border-radius: 50%;
    }
   }
+
+  .card-content {
+    text-align: center;
+  }
+
+  .card-title {
+    text-align: center;
+
+    & > i.material-icons {
+      display: none;
+    }
+  }
 }
 
 .collection.task-list {

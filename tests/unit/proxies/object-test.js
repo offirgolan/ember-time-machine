@@ -16,8 +16,10 @@ module('Unit | Proxy | object', {
     frozenProperties = Ember.A();
     content = Ember.Object.create();
 
-    tm =  TimeMachine.Object.create({
-      content, ignoredProperties, frozenProperties
+    tm = TimeMachine.Object.create({
+      content,
+      ignoredProperties,
+      frozenProperties
     });
 
     state = tm.get('_rootMachineState');
@@ -31,7 +33,7 @@ test('single change detected', function(assert) {
 
   assert.equal(undoStack.length, 1);
 
-  let record = undoStack[0];
+  let [record] = undoStack;
 
   assert.equal(record.type, 'ADD');
   assert.equal(record.before, undefined);
@@ -39,7 +41,7 @@ test('single change detected', function(assert) {
 });
 
 test('multiple changes detected', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
   }
@@ -61,7 +63,7 @@ test('undo single change', function(assert) {
 });
 
 test('undo all changes', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
   }
@@ -98,7 +100,7 @@ test('undo and redo single change', function(assert) {
 });
 
 test('undo and redo all changes', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
   }
@@ -123,7 +125,7 @@ test('undo and redo all changes', function(assert) {
 });
 
 test('commit', function(assert) {
-  for(let i = 1; i <= 10; i++) {
+  for (let i = 1; i <= 10; i++) {
     tm.set('number', i);
     tm.set('squared', i * i);
   }
@@ -218,11 +220,13 @@ test('shouldWrapValue', function(assert) {
 });
 
 test('destroy', function(assert) {
-  let obj = { foo: 'bar' };
+  let obj = {
+    foo: 'bar'
+  };
   content.set('foo', obj);
 
-  const availableMachines = state.get('availableMachines');
-  const fooMachine = tm.get('foo');
+  let availableMachines = state.get('availableMachines');
+  let fooMachine = tm.get('foo');
 
   assert.ok(fooMachine.get('isTimeMachine'));
   assert.ok(availableMachines.has(obj));
@@ -255,7 +259,10 @@ test('general test - date', function(assert) {
 });
 
 test('general test', function(assert) {
-  content.setProperties({ A: 'U', B: 'U'});
+  content.setProperties({
+    A: 'U',
+    B: 'U'
+  });
 
   tm.set('A', 1);
   tm.set('A', 2);
@@ -273,5 +280,8 @@ test('general test', function(assert) {
   tm.undo();
   tm.redo(2, { on: ['A'] });
 
-  assert.deepEqual(content.getProperties(['A', 'B']), {A: 4, B: 1});
+  assert.deepEqual(content.getProperties(['A', 'B']), {
+    A: 4,
+    B: 1
+  });
 });
