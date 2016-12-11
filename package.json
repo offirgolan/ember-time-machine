@@ -1,7 +1,7 @@
 {
   "name": "ember-time-machine",
   "version": "0.0.3",
-  "description": "The default blueprint for ember-cli addons.",
+  "description": "An EmberJS state management solution.",
   "directories": {
     "doc": "doc",
     "test": "tests"
@@ -64,7 +64,8 @@
   },
   "keywords": [
     "ember-addon",
-    "time-machine"
+    "time-machine",
+    "state"
   ],
   "dependencies": {
     "ember-cli-babel": "^5.1.7",
