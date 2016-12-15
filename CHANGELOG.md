@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## v0.0.5
+
+### Pull Requests
+
+- [#116](https://github.com/offirgolan/ember-time-machine/pull/116)  Code cleanup and logic fixes  *by [Offir Golan](https://github.com/offirgolan)*
+
 ## v0.0.4
 
 - Dependency upgrades for Ember 2.10 support
