@@ -3,15 +3,11 @@
 	<div class="row">
 		<div class="col s4">
 			{{#md-card title=model.displayName image=model.avatar activator=true class="user-card"}}
-				{{#md-card-content}}
-					{{!-- <div class="row center-align">
-						<img src={{model.avatar}} alt="" width="200px" class="circle deep-orange lighten-2 responsive-img"> <!-- notice the "circle" class -->
-					</div> --}}
-		    {{/md-card-content}}
+				{{#md-card-content}}{{/md-card-content}}
 
 				{{#md-card-reveal}}
 					<div class="row">
-						{{md-input value=model.username label='Username' class="col s12"}}
+						{{md-input value=model.username label='Username' class="col s12" disabled=true}}
 						{{md-input value=model.firstName label='First Name' class="col s12"}}
 						{{md-input value=model.lastName label='Last Name' class="col s12"}}
 					</div>
@@ -29,7 +25,7 @@
 							<br>
 							<p>{{md-switch checked=model.settings.showTabs name="Show Tabs"}}</p>
 							<br>
-							<p>{{md-switch checked=model.settings.sortableCards name="Use Sortable Cards"}}</p>
+							<p>{{md-switch checked=model.settings.sortableCards name="Sortable Cards"}}</p>
 						</div>
 					</div>
 		    {{/md-card-content}}
@@ -41,7 +37,7 @@
 					{{#md-card-content}}
 						<div class="row">
 							<div class="col s1 center-align">
-								<span class="new-task-icon">+</span>
+								<span class="new-task-icon" {{action 'addTask'}}>+</span>
 							</div>
 							<div class="col s11">
 									{{input value=newTask placeholder="What needs to be done?" enter=(action 'addTask')}}
@@ -109,25 +105,25 @@
 	class="fixed-btns"
 	btnIcon="fa fa-undo"
 	btnClass="btn-large deep-orange darken-1"
-	action="undo"}}
+	action=(action 'undo')}}
 
 	{{md-fixed-btn
 		btnClass="blue-grey lighten-1"
 		btnIcon="fa fa-floppy-o"
-		action="commit"}}
+		action=(action 'commit')}}
 
 	{{md-fixed-btn
 		btnClass="yellow darken-1"
 		btnIcon="fa fa-repeat all"
-		action="redoAll"}}
+		action=(action 'redoAll')}}
 
 	{{md-fixed-btn
 		btnClass="amber lighten-1"
 		btnIcon="fa fa-undo all"
-		action="undoAll"}}
+		action=(action 'undoAll')}}
 
 	{{md-fixed-btn
 		btnClass="orange darken-1"
 		btnIcon="fa fa-repeat"
-		action="redo"}}
+		action=(action 'redo')}}
 {{/md-fixed-btns}}

@@ -15,7 +15,14 @@ export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
     let path = this.get('_path');
 
     if (state && !pathInGlobs(path.concat(key).join('.'), state.get('frozenProperties'))) {
-      this._addRecord(new Record(content, path, key, content.get(key), value, false));
+      this._addRecord(new Record({
+        target: content,
+        path,
+        key,
+        before: content.get(key),
+        after: value
+      }));
+
       return this._super(key, unwrapValue(value));
     }
 
