@@ -246,9 +246,9 @@ export default Ember.Mixin.create({
     let state = this.get('_rootMachineState');
 
     Logger.debug('+====================================== Undo Stack ======================================+');
-    console.table(state.get('undoStack'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp', 'isArray']);
+    console.table(state.get('undoStack'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp']);
     Logger.debug('+====================================== Redo Stack ======================================+');
-    console.table(state.get('redoStack'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp', 'isArray']);
+    console.table(state.get('redoStack'), properties || ['fullPath', 'before', 'after', 'type', 'timestamp']);
     Logger.debug('+========================================================================================+');
 
     Logger.debug('Content: ', this.get('content'));
@@ -307,8 +307,6 @@ export default Ember.Mixin.create({
     let state = this.get('_rootMachineState');
     let stack = state.get(`${type}Stack`);
     let extractedRecords = this._extractRecords(stack, numRecords, options);
-
-    console.log(extractedRecords);
 
     extractedRecords.forEach((record, i) => {
       let nextRecord = extractedRecords.objectAt(i + 1);
