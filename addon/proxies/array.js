@@ -12,6 +12,7 @@ export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
   replaceContent(startIndex, numRemoved, objects) {
     let state = this.get('_rootMachineState');
     let path = this.get('_path');
+    let content = this.get('content');
     let before, after;
 
     if (state && !pathInGlobs(path.join('.'), state.get('frozenProperties'))) {
@@ -21,7 +22,13 @@ export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
         after = objects;
       }
 
-      this._addRecord(new Record(this.get('content'), path, startIndex, before, after, true));
+      this._addRecord(new Record({
+        target: content,
+        path,
+        key: startIndex,
+        before,
+        after
+      }));
 
       return this._super(startIndex, numRemoved, unwrapValue(objects));
     }

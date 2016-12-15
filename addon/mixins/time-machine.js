@@ -230,7 +230,7 @@ export default Ember.Mixin.create({
     let content = this.get('content');
 
     if (isArray(content)) {
-      return emberArray(content).invoke(...arguments);
+      return emberArray(content).invoke(methodName, ...args);
     } else {
       return tryInvoke(content, methodName, args);
     }
@@ -323,7 +323,9 @@ export default Ember.Mixin.create({
         } else {
           RecordUtils.redoArrayRecord(record);
         }
-      } else if (isLast || record.fullPath !== nextRecord.fullPath) {
+      } else if (isLast ||
+          record.fullPath !== nextRecord.fullPath ||
+          record.target !== nextRecord.target) {
         /*
           Apply the last object property change that occured in a row.
           ex) If firstName changed 5 times in a row and we undo, then apply only
@@ -340,10 +342,10 @@ export default Ember.Mixin.create({
    * Extract the specified number of records from the given stack
    *
    * @method _extractRecords
-   * @param  {String}      type       'undo' or 'redo'
-   * @param  {Number}      numRecords Number of records to apply
-   * @param  {Object}      options
-   * @return {Array}                  Records that were extracted
+   * @param  {Array} stack
+   * @param  {Number} numRecords Number of records to apply
+   * @param  {Object} options
+   * @return {Array} Records that were extracted
    * @private
    */
   _extractRecords(stack, numRecords, options = {}) {

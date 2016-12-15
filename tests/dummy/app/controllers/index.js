@@ -1,5 +1,9 @@
 import Ember from 'ember';
 
+const {
+  isEmpty
+} = Ember;
+
 export default Ember.Controller.extend({
   store: Ember.inject.service(),
 
@@ -8,15 +12,20 @@ export default Ember.Controller.extend({
 
   actions: {
     addTask() {
-      let newTask = this.get('store').createRecord('task', {
-        title: this.get('newTask')
-      });
+      let title = this.get('newTask');
+
+      if (isEmpty(title)) {
+        return;
+      }
+
+      let newTask = this.get('store').createRecord('task', { title });
 
       if (this.get('model.settings.newOnTop')) {
         this.get('model.tasks').insertAt(0, newTask);
       } else {
         this.get('model.tasks').pushObject(newTask);
       }
+
       this.set('newTask', '');
     },
     removeTask(task) {

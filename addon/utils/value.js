@@ -17,7 +17,7 @@ export function wrapValue(obj, key, value) {
     return availableMachines.get(value);
   }
 
-  if (shouldWrapValue(...arguments)) {
+  if (shouldWrapValue(obj, key, value)) {
     if (isArray(value)) {
       Machine = TimeMachine.Array;
     } else if (typeof value === 'object') {
@@ -40,12 +40,12 @@ export function wrapValue(obj, key, value) {
 }
 
 export function unwrapValue(value) {
-  if (value && isArray(value)) {
-    return value.map((v) => get(v, 'isTimeMachine') ? unwrapValue(get(v, 'content')) : v);
+  if (value && get(value, 'isTimeMachine')) {
+    return unwrapValue(get(value, 'content'));
   }
 
-  if (value && (value instanceof Ember.ObjectProxy || get(value, 'isTimeMachine'))) {
-    return unwrapValue(get(value, 'content'));
+  if (value && isArray(value)) {
+    return value.map((v) => get(v, 'isTimeMachine') ? unwrapValue(get(v, 'content')) : v);
   }
 
   return value;
@@ -54,12 +54,11 @@ export function unwrapValue(value) {
 function shouldWrapValue(obj, key, value) {
   let state = obj.get('_rootMachineState');
   let maxDepth = state.get('maxDepth');
-  let shouldWrapValue = state.get('shouldWrapValue');
-
   let fullPath = obj.get('_path').concat(key);
   let valueType = typeOf(value);
-  let trackCurrDepth = maxDepth < 0 || fullPath.length <= maxDepth;
-  let correctValueType = valueType === 'object' || valueType === 'instance' || valueType === 'array';
 
-  return value && correctValueType && trackCurrDepth && !get(value, 'isTimeMachine') && shouldWrapValue(value, obj, key);
+  return (valueType === 'object' || valueType === 'instance' || valueType === 'array') &&
+         (maxDepth < 0 || fullPath.length <= maxDepth) &&
+         !get(value, 'isTimeMachine') &&
+         state.shouldWrapValue(value, obj, key);
 }

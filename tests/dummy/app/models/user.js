@@ -7,8 +7,11 @@ const { computed } = Ember;
 export default DS.Model.extend({
   firstName: attr('string'),
   lastName: attr('string'),
-  username: attr('string'),
   avatar: attr('string'),
+
+  username: computed('firstName', function() {
+    return `${this.get('firstName')}ster`;
+  }).readOnly(),
 
   settings: DS.belongsTo('setting'),
   tasks: DS.hasMany('task'),
