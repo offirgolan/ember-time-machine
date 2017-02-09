@@ -1,6 +1,12 @@
 Changelog
 =========
 
+## v0.0.6
+
+### Pull Requests
+
+- [#118](https://github.com/offirgolan/ember-time-machine/pull/118)  Use Ember.get in Object Proxy  *by [Geoffrey Donaldson](https://github.com/geoffreyd)*
+
 ## v0.0.5
 
 ### Pull Requests
