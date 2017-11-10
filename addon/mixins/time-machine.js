@@ -108,9 +108,30 @@ export default Ember.Mixin.create({
    */
   canRedo: computed.notEmpty('_rootMachineState.redoStack').readOnly(),
 
+  _changeInProgress: false,
+
+  _totalChangesInProgress: 0,
+
   init() {
     this._super(...arguments);
     this._setupMachine();
+    // this._setProperties = this.setProperties;
+    // this.setProperties = function(properties) {
+    //   const undoTotal = this.get('_rootMachineState.undoTotal');
+    //   undoTotal.push(Object.keys(properties).length);
+    //   return this._setProperties(properties);
+    // };
+  },
+
+  startTimeMachine() {
+    this._changeInProgress = true;
+  },
+
+  stopTimeMachine() {
+    const undoTotal = this.get('_rootMachineState.undoTotal');
+    undoTotal.push(this._totalChangesInProgress);
+    this._totalChangesInProgress = 0;
+    this._changeInProgress = false;
   },
 
   destroy() {
@@ -148,6 +169,8 @@ export default Ember.Mixin.create({
     let appliedRecords = [];
 
     if (this.get('canUndo')) {
+      numUndos = state.get('undoTotal').pop();
+      console.log('undoing', numUndos);
       appliedRecords = this._applyRecords('undo', numUndos, options);
       state.get('redoStack').pushObjects(appliedRecords);
     }
@@ -278,6 +301,7 @@ export default Ember.Mixin.create({
       MachineStates.set(this, Ember.Object.create({
         undoStack: emberArray(),
         redoStack: emberArray(),
+        undoTotal: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
         frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
         shouldWrapValue: isNone(shouldWrapValue) ? () => true : shouldWrapValue,
@@ -387,6 +411,19 @@ export default Ember.Mixin.create({
       if (!isEmpty(redoStack)) {
         redoStack.setObjects([]);
       }
+
+      if (this._changeInProgress) {
+        this._totalChangesInProgress++;
+      } else {
+        const undoTotal = this.get('_rootMachineState.undoTotal');
+        undoTotal.push(1);
+      }
+
+      // beginPropertyChanges
+      // endPropertyChanges
+
+      // undoTotal.push(this._changeInProgress ? (undoTotal.pop() || 0) + 1 : 1);
+
     }
   }
 });
