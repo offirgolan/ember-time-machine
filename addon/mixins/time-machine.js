@@ -173,6 +173,7 @@ export default Ember.Mixin.create({
       console.log('undoing', numUndos);
       appliedRecords = this._applyRecords('undo', numUndos, options);
       state.get('redoStack').pushObjects(appliedRecords);
+      state.get('redoTotal').push(numUndos);
     }
 
     return appliedRecords;
@@ -196,6 +197,7 @@ export default Ember.Mixin.create({
     let appliedRecords = [];
 
     if (this.get('canRedo')) {
+      numRedos = state.get('redoTotal').pop();
       appliedRecords = this._applyRecords('redo', numRedos, options);
       state.get('undoStack').pushObjects(appliedRecords);
       state.get('undoTotal').push(numRedos);
@@ -303,6 +305,7 @@ export default Ember.Mixin.create({
         undoStack: emberArray(),
         redoStack: emberArray(),
         undoTotal: emberArray(),
+        redoTotal: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
         frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
         shouldWrapValue: isNone(shouldWrapValue) ? () => true : shouldWrapValue,
