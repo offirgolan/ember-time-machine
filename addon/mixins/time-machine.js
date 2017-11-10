@@ -198,6 +198,7 @@ export default Ember.Mixin.create({
     if (this.get('canRedo')) {
       appliedRecords = this._applyRecords('redo', numRedos, options);
       state.get('undoStack').pushObjects(appliedRecords);
+      state.get('undoTotal').push(numRedos);
     }
 
     return appliedRecords;
