@@ -112,6 +112,8 @@ export default Ember.Mixin.create({
 
   _totalChangesInProgress: 0,
 
+  _multiChanges: null,
+
   init() {
     this._super(...arguments);
     this._setupMachine();
@@ -119,13 +121,13 @@ export default Ember.Mixin.create({
 
   startTimeMachine() {
     this._changeInProgress = true;
+    this._multiChanges = [];
   },
 
   stopTimeMachine() {
-    let undoTotals = this.get('_rootMachineState.undoTotals');
-    undoTotals.push(this._totalChangesInProgress);
-    this._totalChangesInProgress = 0;
     this._changeInProgress = false;
+    this.get('_rootMachineState.undoStack').push(this._multiChanges);
+    this._multiChanges = null;
   },
 
   destroy() {
@@ -161,14 +163,10 @@ export default Ember.Mixin.create({
   undo(numUndos = 1, options = {}) {
     let state = this.get('_rootMachineState');
     let appliedRecords = [];
-    let numUndoTotals;
 
     if (this.get('canUndo')) {
-      numUndoTotals = state.get('undoTotals').splice(-numUndos);
-      numUndos = numUndoTotals.reduce((value, total) => value + total, 0);
       appliedRecords = this._applyRecords('undo', numUndos, options);
       state.get('redoStack').pushObjects(appliedRecords);
-      state.get('redoTotals').push(numUndos);
     }
 
     return appliedRecords;
@@ -190,14 +188,10 @@ export default Ember.Mixin.create({
   redo(numRedos = 1, options = {}) {
     let state = this.get('_rootMachineState');
     let appliedRecords = [];
-    let numRedoTotals;
 
     if (this.get('canRedo')) {
-      numRedoTotals = state.get('redoTotals').splice(-numRedos);
-      numRedos = numRedoTotals.reduce((value, total) => value + total, 0);
       appliedRecords = this._applyRecords('redo', numRedos, options);
       state.get('undoStack').pushObjects(appliedRecords);
-      state.get('undoTotals').push(numRedos);
     }
 
     return appliedRecords;
@@ -213,7 +207,7 @@ export default Ember.Mixin.create({
    */
   undoAll(options = {}) {
     let state = this.get('_rootMachineState');
-    return this.undo(state.get('undoTotals.length'), options);
+    return this.undo(state.get('undoStack.length'), options);
   },
 
   /**
@@ -226,7 +220,7 @@ export default Ember.Mixin.create({
    */
   redoAll(options = {}) {
     let state = this.get('_rootMachineState');
-    return this.redo(state.get('redoTotals.length'), options);
+    return this.redo(state.get('redoStack.length'), options);
   },
 
   /**
@@ -301,8 +295,6 @@ export default Ember.Mixin.create({
       MachineStates.set(this, Ember.Object.create({
         undoStack: emberArray(),
         redoStack: emberArray(),
-        undoTotals: emberArray(),
-        redoTotals: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
         frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
         shouldWrapValue: isNone(shouldWrapValue) ? () => true : shouldWrapValue,
@@ -323,15 +315,16 @@ export default Ember.Mixin.create({
    *
    * @method _applyRecords
    * @param  {String}      type       'undo' or 'redo'
-   * @param  {Number}      numRecords Number of records to apply
+   * @param  {Number}      numSteps   Number of steps to apply
    * @param  {Object}      options
    * @return {Array}                  Records that were applied
    * @private
    */
-  _applyRecords(type, numRecords, options = {}) {
+  _applyRecords(type, numSteps, options = {}) {
     let state = this.get('_rootMachineState');
     let stack = state.get(`${type}Stack`);
-    let extractedRecords = this._extractRecords(stack, numRecords, options);
+    let steps = this._extractSteps(stack, numSteps, options);
+    let extractedRecords = emberArray(steps.reduce((v, r) => [...r, ...v], []));
 
     extractedRecords.forEach((record, i) => {
       let nextRecord = extractedRecords.objectAt(i + 1);
@@ -360,39 +353,48 @@ export default Ember.Mixin.create({
       }
     });
 
-    return extractedRecords;
+    return steps;
   },
 
   /**
    * Extract the specified number of records from the given stack
    *
-   * @method _extractRecords
+   * @method _extractSteps
    * @param  {Array} stack
-   * @param  {Number} numRecords Number of records to apply
+   * @param  {Number} numSteps Number of steps to apply
    * @param  {Object} options
    * @return {Array} Records that were extracted
    * @private
    */
-  _extractRecords(stack, numRecords, options = {}) {
+  _extractSteps(stack, numSteps, options = {}) {
     let whitelist = options.on;
     let blacklist = options.excludes;
-    let extractedRecords = [];
+    let extractedSteps = [];
 
-    for (let i = stack.length - 1; i >= 0 && extractedRecords.length < numRecords; i--) {
-      let record = stack.objectAt(i);
+    for (let i = stack.length - 1; i >= 0 && extractedSteps.length < numSteps; i--) {
+      let changes = emberArray(stack.objectAt(i));
 
-      if (isNone(record) ||
+      let matchedChanges = changes.filter((record) => {
+        return !(isNone(record) ||
         (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
-        (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist))) {
+        (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist)));
+      });
+
+      if (matchedChanges.length === 0) {
         continue;
       }
 
-      extractedRecords.push(record);
+      changes.removeObjects(matchedChanges);
+
+      // if there are no more changes in a step no need to keep it in a stack
+      if (changes.length === 0) {
+        stack.removeObject(changes);
+      }
+
+      extractedSteps.push(matchedChanges);
     }
 
-    stack.removeObjects(extractedRecords);
-
-    return emberArray(extractedRecords);
+    return emberArray(extractedSteps);
   },
 
   /**
@@ -405,20 +407,20 @@ export default Ember.Mixin.create({
   _addRecord(record) {
     let state = this.get('_rootMachineState');
     let redoStack = state.get('redoStack');
+    let undoStack = state.get('undoStack');
 
     if (!pathInGlobs(record.fullPath, state.get('ignoredProperties'))) {
-      state.get('undoStack').pushObject(Object.freeze(record));
+      let frozenRecord = Object.freeze(record);
+
+      if (this._changeInProgress) {
+        this._multiChanges.push(frozenRecord);
+      } else {
+        undoStack.pushObject([frozenRecord]);
+      }
 
       if (!isEmpty(redoStack)) {
         redoStack.setObjects([]);
       }
-
-      if (this._changeInProgress) {
-        this._totalChangesInProgress++;
-      } else {
-        this.get('_rootMachineState.undoTotals').push(1);
-      }
-
     }
   }
 });
