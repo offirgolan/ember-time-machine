@@ -344,7 +344,7 @@ export default Ember.Mixin.create({
     let state = this.get('_rootMachineState');
     let stack = state.get(`${type}Stack`);
     let changeSets = this._extractChangeSets(stack, numSteps, options);
-    let extractedRecords = emberArray(changeSets.reduceRight((v, r) => [...r, ...v], []));
+    let extractedRecords = emberArray(changeSets.reduceRight((r, v) => [...v.reverse(), ...r], []));
 
     extractedRecords.forEach((record, i) => {
       let nextRecord = extractedRecords.objectAt(i + 1);
