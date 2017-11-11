@@ -118,8 +118,6 @@ export default Ember.Mixin.create({
 
   _changeInProgress: false,
 
-  _totalChangesInProgress: 0,
-
   _changeSet: null,
 
   init() {
