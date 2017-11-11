@@ -116,8 +116,22 @@ export default Ember.Mixin.create({
    */
   canRedo: computed.notEmpty('_rootMachineState.redoStack').readOnly(),
 
+  /**
+   * A flag indicating that sequential changes will be added to the last change set in the undoStack
+   *
+   * @private
+   * @property
+   * @type {Boolean}
+   */
   _changeInProgress: false,
 
+  /**
+   * A collection of changes to be treated as one change set
+   *
+   * @private
+   * @property
+   * @type {Array.<Record>}
+   */
   _changeSet: null,
 
   init() {
