@@ -15,6 +15,14 @@ const {
   A: emberArray
 } = Ember;
 
+function filterChangeSet(changeSet, whitelist, blacklist) {
+  return changeSet.filter((record) => {
+    return !(isNone(record) ||
+      (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
+      (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist)));
+  });
+}
+
 export default Ember.Mixin.create({
   /**
    * @property isTimeMachine
@@ -112,7 +120,7 @@ export default Ember.Mixin.create({
 
   _totalChangesInProgress: 0,
 
-  _multiChanges: null,
+  _changeSet: null,
 
   init() {
     this._super(...arguments);
@@ -121,13 +129,13 @@ export default Ember.Mixin.create({
 
   startTimeMachine() {
     this._changeInProgress = true;
-    this._multiChanges = [];
+    this._changeSet = [];
   },
 
   stopTimeMachine() {
     this._changeInProgress = false;
-    this.get('_rootMachineState.undoStack').push(this._multiChanges);
-    this._multiChanges = null;
+    this.get('_rootMachineState.undoStack').push(this._changeSet);
+    this._changeSet = null;
   },
 
   destroy() {
@@ -323,8 +331,8 @@ export default Ember.Mixin.create({
   _applyRecords(type, numSteps, options = {}) {
     let state = this.get('_rootMachineState');
     let stack = state.get(`${type}Stack`);
-    let steps = this._extractSteps(stack, numSteps, options);
-    let extractedRecords = emberArray(steps.reduce((v, r) => [...r, ...v], []));
+    let changeSets = this._extractChangeSets(stack, numSteps, options);
+    let extractedRecords = emberArray(changeSets.reduceRight((v, r) => [...r, ...v], []));
 
     extractedRecords.forEach((record, i) => {
       let nextRecord = extractedRecords.objectAt(i + 1);
@@ -353,48 +361,47 @@ export default Ember.Mixin.create({
       }
     });
 
-    return steps;
+    return changeSets;
   },
 
   /**
-   * Extract the specified number of records from the given stack
+   * Extract the specified number of changeSets from the given stack
    *
-   * @method _extractSteps
+   * @method _extractChangeSets
    * @param  {Array} stack
-   * @param  {Number} numSteps Number of steps to apply
+   * @param  {Number} total Number of steps to apply
    * @param  {Object} options
    * @return {Array} Records that were extracted
    * @private
    */
-  _extractSteps(stack, numSteps, options = {}) {
+  _extractChangeSets(stack, total, options = {}) {
     let whitelist = options.on;
     let blacklist = options.excludes;
-    let extractedSteps = [];
+    let result = emberArray();
+    let emptyChangeSets = emberArray();
 
-    for (let i = stack.length - 1; i >= 0 && extractedSteps.length < numSteps; i--) {
-      let changes = emberArray(stack.objectAt(i));
-
-      let matchedChanges = changes.filter((record) => {
-        return !(isNone(record) ||
-        (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
-        (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist)));
-      });
+    for (let i = stack.length - 1; i >= 0 && result.length < total; i--) {
+      let changeSet = emberArray(stack.objectAt(i));
+      let matchedChanges = filterChangeSet(changeSet, whitelist, blacklist);
 
       if (matchedChanges.length === 0) {
         continue;
       }
 
-      changes.removeObjects(matchedChanges);
+      changeSet.removeObjects(matchedChanges);
 
-      // if there are no more changes in a step no need to keep it in a stack
-      if (changes.length === 0) {
-        stack.removeObject(changes);
+      // if there are no more changes in a changeSet no need to keep it in a stack
+      if (changeSet.length === 0) {
+        emptyChangeSets.push(changeSet);
       }
 
-      extractedSteps.push(matchedChanges);
+      result.push(matchedChanges);
     }
 
-    return emberArray(extractedSteps);
+    // remove empty changeSets from the stack
+    stack.removeObjects(emptyChangeSets);
+
+    return result;
   },
 
   /**
@@ -413,7 +420,7 @@ export default Ember.Mixin.create({
       let frozenRecord = Object.freeze(record);
 
       if (this._changeInProgress) {
-        this._multiChanges.push(frozenRecord);
+        this._changeSet.push(frozenRecord);
       } else {
         undoStack.pushObject([frozenRecord]);
       }

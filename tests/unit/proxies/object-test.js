@@ -33,7 +33,8 @@ test('single change detected', function(assert) {
 
   assert.equal(undoStack.length, 1);
 
-  let [record] = undoStack;
+  let [changeSet] = undoStack;
+  let [record] = changeSet;
 
   assert.equal(record.type, 'ADD');
   assert.equal(record.before, undefined);
