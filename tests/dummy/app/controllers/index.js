@@ -12,7 +12,7 @@ export default Ember.Controller.extend({
 
   actions: {
     multiChange() {
-      const task = this.get('model.tasks.firstObject');
+      let task = this.get('model.tasks.firstObject');
       task.startTimeMachine();
       task.setProperties({
         title: new Date().toString(),

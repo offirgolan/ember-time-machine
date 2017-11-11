@@ -115,12 +115,6 @@ export default Ember.Mixin.create({
   init() {
     this._super(...arguments);
     this._setupMachine();
-    // this._setProperties = this.setProperties;
-    // this.setProperties = function(properties) {
-    //   const undoTotal = this.get('_rootMachineState.undoTotal');
-    //   undoTotal.push(Object.keys(properties).length);
-    //   return this._setProperties(properties);
-    // };
   },
 
   startTimeMachine() {
@@ -128,8 +122,8 @@ export default Ember.Mixin.create({
   },
 
   stopTimeMachine() {
-    const undoTotal = this.get('_rootMachineState.undoTotal');
-    undoTotal.push(this._totalChangesInProgress);
+    let undoTotals = this.get('_rootMachineState.undoTotals');
+    undoTotals.push(this._totalChangesInProgress);
     this._totalChangesInProgress = 0;
     this._changeInProgress = false;
   },
@@ -167,13 +161,14 @@ export default Ember.Mixin.create({
   undo(numUndos = 1, options = {}) {
     let state = this.get('_rootMachineState');
     let appliedRecords = [];
+    let numUndoTotals;
 
     if (this.get('canUndo')) {
-      numUndos = state.get('undoTotal').pop();
-      console.log('undoing', numUndos);
+      numUndoTotals = state.get('undoTotals').splice(-numUndos);
+      numUndos = numUndoTotals.reduce((value, total) => value + total, 0);
       appliedRecords = this._applyRecords('undo', numUndos, options);
       state.get('redoStack').pushObjects(appliedRecords);
-      state.get('redoTotal').push(numUndos);
+      state.get('redoTotals').push(numUndos);
     }
 
     return appliedRecords;
@@ -195,12 +190,14 @@ export default Ember.Mixin.create({
   redo(numRedos = 1, options = {}) {
     let state = this.get('_rootMachineState');
     let appliedRecords = [];
+    let numRedoTotals;
 
     if (this.get('canRedo')) {
-      numRedos = state.get('redoTotal').pop();
+      numRedoTotals = state.get('redoTotals').splice(-numRedos);
+      numRedos = numRedoTotals.reduce((value, total) => value + total, 0);
       appliedRecords = this._applyRecords('redo', numRedos, options);
       state.get('undoStack').pushObjects(appliedRecords);
-      state.get('undoTotal').push(numRedos);
+      state.get('undoTotals').push(numRedos);
     }
 
     return appliedRecords;
@@ -216,7 +213,7 @@ export default Ember.Mixin.create({
    */
   undoAll(options = {}) {
     let state = this.get('_rootMachineState');
-    return this.undo(state.get('undoStack.length'), options);
+    return this.undo(state.get('undoTotals.length'), options);
   },
 
   /**
@@ -229,7 +226,7 @@ export default Ember.Mixin.create({
    */
   redoAll(options = {}) {
     let state = this.get('_rootMachineState');
-    return this.redo(state.get('redoStack.length'), options);
+    return this.redo(state.get('redoTotals.length'), options);
   },
 
   /**
@@ -304,8 +301,8 @@ export default Ember.Mixin.create({
       MachineStates.set(this, Ember.Object.create({
         undoStack: emberArray(),
         redoStack: emberArray(),
-        undoTotal: emberArray(),
-        redoTotal: emberArray(),
+        undoTotals: emberArray(),
+        redoTotals: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,
         frozenProperties: isNone(frozenProperties) ? [] : frozenProperties,
         shouldWrapValue: isNone(shouldWrapValue) ? () => true : shouldWrapValue,
@@ -419,14 +416,8 @@ export default Ember.Mixin.create({
       if (this._changeInProgress) {
         this._totalChangesInProgress++;
       } else {
-        const undoTotal = this.get('_rootMachineState.undoTotal');
-        undoTotal.push(1);
+        this.get('_rootMachineState.undoTotals').push(1);
       }
-
-      // beginPropertyChanges
-      // endPropertyChanges
-
-      // undoTotal.push(this._changeInProgress ? (undoTotal.pop() || 0) + 1 : 1);
 
     }
   }
