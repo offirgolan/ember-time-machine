@@ -17,15 +17,24 @@ export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
     let path = get(this, '_path');
 
     if (state && !pathInGlobs(path.concat(key).join('.'), get(state, 'frozenProperties'))) {
-      this._addRecord(new Record({
-        target: content,
-        path,
-        key,
-        before: get(content, key),
-        after: value
-      }));
+      let before = get(content, key);
+      let after = value;
 
-      return this._super(key, unwrapValue(value));
+      // this will ensure that we add to the undo stack only if the value has changed
+      // unfortunately, for the cases when the set value is not a primitive we will not be able to detect deep equality
+      // as we use `===` operator which will compare objects by references
+      // https://github.com/emberjs/ember.js/issues/5626
+      if (after !== before) {
+        this._addRecord(new Record({
+          target: content,
+          path,
+          key,
+          before: get(content, key),
+          after: value
+        }));
+
+        return this._super(key, unwrapValue(value));
+      }
     }
 
     this.notifyPropertyChange(key);
