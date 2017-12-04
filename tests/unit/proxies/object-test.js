@@ -28,6 +28,14 @@ module('Unit | Proxy | object', {
   }
 });
 
+test('it does not add to undo stack if the primitive value is the same', function(assert) {
+  tm.set('firstName', 'Offir');
+  tm.set('firstName', 'Offir');
+  tm.set('firstName', 'Offir');
+
+  assert.equal(undoStack.length, 1);
+});
+
 test('single change detected', function(assert) {
   tm.set('firstName', 'Offir');
 
