@@ -294,3 +294,26 @@ test('general test', function(assert) {
     B: 1
   });
 });
+
+test(`undo/redo after making multiple changes between "startTimeMachine" and "stopTimeMachine"`, function(assert) {
+
+  content.setProperties({
+    firstName: 'Luke',
+    lastName: 'Skywalker'
+  });
+
+  tm.startTimeMachine();
+  tm.set('firstName', 'Offir');
+  tm.set('lastName', 'Gollan');
+  tm.stopTimeMachine();
+
+  tm.undo();
+
+  assert.equal(tm.get('firstName'), 'Luke');
+  assert.equal(tm.get('lastName'), 'Skywalker');
+
+  tm.redo();
+
+  assert.equal(tm.get('firstName'), 'Offir');
+  assert.equal(tm.get('lastName'), 'Gollan');
+});

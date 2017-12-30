@@ -215,3 +215,24 @@ test('invoke', function(assert) {
 
   tm.invoke('save');
 });
+
+test('making multiple changes between `startTimeMachine` and `stopTimeMachine` adds 1 changeset in the undo stack',
+  function(assert) {
+
+  tm.startTimeMachine();
+  tm.pushObject('Offir');
+  tm.pushObject('Golan');
+  tm.stopTimeMachine();
+
+  assert.equal(undoStack.length, 1);
+});
+
+test('calling `stopTimeMachine` multiple times does not add to the undo stack', function(assert) {
+  tm.startTimeMachine();
+  tm.pushObject('Offir');
+  tm.pushObject('Golan');
+  tm.stopTimeMachine();
+  tm.stopTimeMachine();
+
+  assert.equal(undoStack.length, 1);
+});

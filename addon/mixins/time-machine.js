@@ -126,7 +126,11 @@ export default Ember.Mixin.create({
   _changeInProgress: false,
 
   /**
-   * A collection of changes to be treated as one change set
+   * Each item in the undo/redo stack is a collection of changes.
+   *
+   * This private property is a temporary collection of changes which allows us to collect all the changes made
+   * after `.startTimeMachine` method is executed. Once `.stopTimeMachine` is called this temp collection of changes
+   * is added to the undoStack.
    *
    * @private
    * @property
@@ -139,14 +143,31 @@ export default Ember.Mixin.create({
     this._setupMachine();
   },
 
+  /**
+   * Use this method when you need to be able to undo multiple changes with 1 undo step. Once this method is called
+   * all the changes will be grouped together into one `_changeSet` until `.stopTimeMachine` is called.
+   *
+   * @method startTimeMachine
+   * @public
+   * @return {void}
+   */
   startTimeMachine() {
     this._changeInProgress = true;
     this._changeSet = [];
   },
 
+  /**
+   * This method should be called after you done collecting multiple changes via `.startTimeMachine`.
+   *
+   * @method stopTimeMachine
+   * @public
+   * @return {void}
+   */
   stopTimeMachine() {
     this._changeInProgress = false;
-    this.get('_rootMachineState.undoStack').push(this._changeSet);
+    if (!isEmpty(this._changeSet)) {
+      this.get('_rootMachineState.undoStack').push(this._changeSet);
+    }
     this._changeSet = null;
   },
 
@@ -330,14 +351,14 @@ export default Ember.Mixin.create({
   },
 
   /**
-   * Apply the specified number of records given from either the undo or redo
+   * Apply the specified number of changesets given from either the undo or redo
    * stack
    *
    * @method _applyRecords
    * @param  {String}      type       'undo' or 'redo'
    * @param  {Number}      numSteps   Number of steps to apply
    * @param  {Object}      options
-   * @return {Array}                  Records that were applied
+   * @return {Array.<Array>}  Changesets that were applied
    * @private
    */
   _applyRecords(type, numSteps, options = {}) {
@@ -383,7 +404,7 @@ export default Ember.Mixin.create({
    * @param  {Array} stack
    * @param  {Number} total Number of steps to apply
    * @param  {Object} options
-   * @return {Array} Records that were extracted
+   * @return {Array.<Array>} Changesets that were extracted
    * @private
    */
   _extractChangeSets(stack, total, options = {}) {
