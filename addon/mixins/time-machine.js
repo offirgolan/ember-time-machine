@@ -15,6 +15,14 @@ const {
   A: emberArray
 } = Ember;
 
+function filterChangeSet(changeSet, whitelist, blacklist) {
+  return changeSet.filter((record) => {
+    return !(isNone(record) ||
+      (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
+      (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist)));
+  });
+}
+
 export default Ember.Mixin.create({
   /**
    * @property isTimeMachine
@@ -108,9 +116,59 @@ export default Ember.Mixin.create({
    */
   canRedo: computed.notEmpty('_rootMachineState.redoStack').readOnly(),
 
+  /**
+   * A flag indicating that sequential changes will be added to the last change set in the undoStack
+   *
+   * @private
+   * @property
+   * @type {Boolean}
+   */
+  _changeInProgress: false,
+
+  /**
+   * Each item in the undo/redo stack is a collection of changes.
+   *
+   * This private property is a temporary collection of changes which allows us to collect all the changes made
+   * after `.startTimeMachine` method is executed. Once `.stopTimeMachine` is called this temp collection of changes
+   * is added to the undoStack.
+   *
+   * @private
+   * @property
+   * @type {Array.<Record>}
+   */
+  _changeSet: null,
+
   init() {
     this._super(...arguments);
     this._setupMachine();
+  },
+
+  /**
+   * Use this method when you need to be able to undo multiple changes with 1 undo step. Once this method is called
+   * all the changes will be grouped together into one `_changeSet` until `.stopTimeMachine` is called.
+   *
+   * @method startTimeMachine
+   * @public
+   * @return {void}
+   */
+  startTimeMachine() {
+    this._changeInProgress = true;
+    this._changeSet = [];
+  },
+
+  /**
+   * This method should be called after you done collecting multiple changes via `.startTimeMachine`.
+   *
+   * @method stopTimeMachine
+   * @public
+   * @return {void}
+   */
+  stopTimeMachine() {
+    this._changeInProgress = false;
+    if (!isEmpty(this._changeSet)) {
+      this.get('_rootMachineState.undoStack').push(this._changeSet);
+    }
+    this._changeSet = null;
   },
 
   destroy() {
@@ -293,20 +351,21 @@ export default Ember.Mixin.create({
   },
 
   /**
-   * Apply the specified number of records given from either the undo or redo
+   * Apply the specified number of changesets given from either the undo or redo
    * stack
    *
    * @method _applyRecords
    * @param  {String}      type       'undo' or 'redo'
-   * @param  {Number}      numRecords Number of records to apply
+   * @param  {Number}      numSteps   Number of steps to apply
    * @param  {Object}      options
-   * @return {Array}                  Records that were applied
+   * @return {Array.<Array>}  Changesets that were applied
    * @private
    */
-  _applyRecords(type, numRecords, options = {}) {
+  _applyRecords(type, numSteps, options = {}) {
     let state = this.get('_rootMachineState');
     let stack = state.get(`${type}Stack`);
-    let extractedRecords = this._extractRecords(stack, numRecords, options);
+    let changeSets = this._extractChangeSets(stack, numSteps, options);
+    let extractedRecords = emberArray(changeSets.reduceRight((r, v) => [...v.reverse(), ...r], []));
 
     extractedRecords.forEach((record, i) => {
       let nextRecord = extractedRecords.objectAt(i + 1);
@@ -335,39 +394,47 @@ export default Ember.Mixin.create({
       }
     });
 
-    return extractedRecords;
+    return changeSets;
   },
 
   /**
-   * Extract the specified number of records from the given stack
+   * Extract the specified number of changeSets from the given stack
    *
-   * @method _extractRecords
+   * @method _extractChangeSets
    * @param  {Array} stack
-   * @param  {Number} numRecords Number of records to apply
+   * @param  {Number} total Number of steps to apply
    * @param  {Object} options
-   * @return {Array} Records that were extracted
+   * @return {Array.<Array>} Changesets that were extracted
    * @private
    */
-  _extractRecords(stack, numRecords, options = {}) {
+  _extractChangeSets(stack, total, options = {}) {
     let whitelist = options.on;
     let blacklist = options.excludes;
-    let extractedRecords = [];
+    let result = emberArray();
+    let emptyChangeSets = emberArray();
 
-    for (let i = stack.length - 1; i >= 0 && extractedRecords.length < numRecords; i--) {
-      let record = stack.objectAt(i);
+    for (let i = stack.length - 1; i >= 0 && result.length < total; i--) {
+      let changeSet = emberArray(stack.objectAt(i));
+      let matchedChanges = filterChangeSet(changeSet, whitelist, blacklist);
 
-      if (isNone(record) ||
-        (isArray(whitelist) && !pathInGlobs(record.fullPath, whitelist)) ||
-        (isArray(blacklist) && pathInGlobs(record.fullPath, blacklist))) {
+      if (matchedChanges.length === 0) {
         continue;
       }
 
-      extractedRecords.push(record);
+      changeSet.removeObjects(matchedChanges);
+
+      // if there are no more changes in a changeSet no need to keep it in a stack
+      if (changeSet.length === 0) {
+        emptyChangeSets.push(changeSet);
+      }
+
+      result.push(matchedChanges);
     }
 
-    stack.removeObjects(extractedRecords);
+    // remove empty changeSets from the stack
+    stack.removeObjects(emptyChangeSets);
 
-    return emberArray(extractedRecords);
+    return result;
   },
 
   /**
@@ -380,9 +447,16 @@ export default Ember.Mixin.create({
   _addRecord(record) {
     let state = this.get('_rootMachineState');
     let redoStack = state.get('redoStack');
+    let undoStack = state.get('undoStack');
 
     if (!pathInGlobs(record.fullPath, state.get('ignoredProperties'))) {
-      state.get('undoStack').pushObject(Object.freeze(record));
+      let frozenRecord = Object.freeze(record);
+
+      if (this._changeInProgress) {
+        this._changeSet.push(frozenRecord);
+      } else {
+        undoStack.pushObject([frozenRecord]);
+      }
 
       if (!isEmpty(redoStack)) {
         redoStack.setObjects([]);

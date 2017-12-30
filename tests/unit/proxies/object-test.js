@@ -41,7 +41,8 @@ test('single change detected', function(assert) {
 
   assert.equal(undoStack.length, 1);
 
-  let [record] = undoStack;
+  let [changeSet] = undoStack;
+  let [record] = changeSet;
 
   assert.equal(record.type, 'ADD');
   assert.equal(record.before, undefined);
@@ -292,4 +293,27 @@ test('general test', function(assert) {
     A: 4,
     B: 1
   });
+});
+
+test(`undo/redo after making multiple changes between "startTimeMachine" and "stopTimeMachine"`, function(assert) {
+
+  content.setProperties({
+    firstName: 'Luke',
+    lastName: 'Skywalker'
+  });
+
+  tm.startTimeMachine();
+  tm.set('firstName', 'Offir');
+  tm.set('lastName', 'Gollan');
+  tm.stopTimeMachine();
+
+  tm.undo();
+
+  assert.equal(tm.get('firstName'), 'Luke');
+  assert.equal(tm.get('lastName'), 'Skywalker');
+
+  tm.redo();
+
+  assert.equal(tm.get('firstName'), 'Offir');
+  assert.equal(tm.get('lastName'), 'Gollan');
 });
