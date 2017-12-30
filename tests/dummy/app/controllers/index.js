@@ -11,16 +11,6 @@ export default Ember.Controller.extend({
   tasksArray: 'tasks',
 
   actions: {
-    multiChange() {
-      let task = this.get('model.tasks.firstObject');
-      task.startTimeMachine();
-      task.setProperties({
-        title: new Date().toString(),
-        isCompleted: true
-      });
-      task.stopTimeMachine();
-    },
-
     addTask() {
       let title = this.get('newTask');
 
