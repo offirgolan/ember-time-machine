@@ -1,12 +1,11 @@
-import Ember from 'ember';
+import { get } from '@ember/object';
+import ObjectProxy from '@ember/object/proxy';
 import RecordKeeperMixin from 'ember-time-machine/mixins/time-machine';
 import Record from 'ember-time-machine/-private/Record';
 import { wrapValue, unwrapValue } from 'ember-time-machine/utils/value';
 import { pathInGlobs } from 'ember-time-machine/utils/utils';
 
-const { get } = Ember;
-
-export default Ember.ObjectProxy.extend(RecordKeeperMixin, {
+export default ObjectProxy.extend(RecordKeeperMixin, {
   unknownProperty(key) {
     return wrapValue(this, key, this._super(...arguments));
   },
