@@ -1,8 +1,8 @@
-import Ember from 'ember';
+import { filterBy } from '@ember/object/computed';
+import { computed } from '@ember/object';
 import DS from 'ember-data';
 
 const { attr } = DS;
-const { computed } = Ember;
 
 export default DS.Model.extend({
   firstName: attr('string'),
@@ -16,8 +16,8 @@ export default DS.Model.extend({
   settings: DS.belongsTo('setting'),
   tasks: DS.hasMany('task'),
 
-  activeTasks: computed.filterBy('tasks', 'isCompleted', false),
-  completedTasks: computed.filterBy('tasks', 'isCompleted', true),
+  activeTasks: filterBy('tasks', 'isCompleted', false),
+  completedTasks: filterBy('tasks', 'isCompleted', true),
 
   displayName: computed('firstName', 'lastName', 'username', function() {
     return `${this.get('username')} (${this.get('firstName')} ${this.get('lastName')})`;

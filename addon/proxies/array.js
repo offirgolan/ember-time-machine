@@ -1,10 +1,10 @@
-import Ember from 'ember';
+import ArrayProxy from '@ember/array/proxy';
 import RecordKeeperMixin from 'ember-time-machine/mixins/time-machine';
 import Record from 'ember-time-machine/-private/Record';
 import { wrapValue, unwrapValue } from 'ember-time-machine/utils/value';
 import { pathInGlobs } from 'ember-time-machine/utils/utils';
 
-export default Ember.ArrayProxy.extend(RecordKeeperMixin, {
+export default ArrayProxy.extend(RecordKeeperMixin, {
   objectAtContent(index) {
     return wrapValue(this, index, this._super(...arguments));
   },

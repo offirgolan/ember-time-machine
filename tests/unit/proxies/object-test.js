@@ -1,20 +1,18 @@
-import Ember from 'ember';
+import EmberObject from '@ember/object';
+import { A } from '@ember/array';
+import { run } from '@ember/runloop';
 import TimeMachine from 'ember-time-machine';
 import MachineStates from 'ember-time-machine/-private/machine-states';
 import { module, test } from 'qunit';
-
-const {
-  run
-} = Ember;
 
 let tm, state, content, undoStack, redoStack;
 let ignoredProperties, frozenProperties;
 
 module('Unit | Proxy | object', {
   beforeEach() {
-    ignoredProperties = Ember.A();
-    frozenProperties = Ember.A();
-    content = Ember.Object.create();
+    ignoredProperties = A();
+    frozenProperties = A();
+    content = EmberObject.create();
 
     tm = TimeMachine.Object.create({
       content,
@@ -177,7 +175,7 @@ test('ignoredProperties - shallow', function(assert) {
 });
 
 test('ignoredProperties - nested', function(assert) {
-  content.set('user', Ember.Object.create());
+  content.set('user', EmberObject.create());
   ignoredProperties.setObjects(['user.lastName']);
 
   tm.set('user.firstName', 'Offir');

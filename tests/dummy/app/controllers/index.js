@@ -1,11 +1,9 @@
-import Ember from 'ember';
+import { inject as service } from '@ember/service';
+import Controller from '@ember/controller';
+import { isEmpty } from '@ember/utils';
 
-const {
-  isEmpty
-} = Ember;
-
-export default Ember.Controller.extend({
-  store: Ember.inject.service(),
+export default Controller.extend({
+  store: service(),
 
   newTask: '',
   tasksArray: 'tasks',

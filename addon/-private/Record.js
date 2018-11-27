@@ -1,9 +1,5 @@
-import Ember from 'ember';
+import { isArray } from '@ember/array';
 import { unwrapValue } from 'ember-time-machine/utils/value';
-
-const {
-  isArray
-} = Ember;
 
 export default class Record {
   constructor({ target, path, key, before, after }) {

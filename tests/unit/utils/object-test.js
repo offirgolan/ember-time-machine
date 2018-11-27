@@ -1,12 +1,9 @@
-import Ember from 'ember';
+import ArrayProxy from '@ember/array/proxy';
+import { A as emberArray } from '@ember/array';
 import { getObject, setObject } from 'ember-time-machine/utils/object';
 import { module, test } from 'qunit';
 
 module('Unit | Utility | object');
-
-const {
-  A: emberArray
-} = Ember;
 
 let root = {
   a: {
@@ -36,7 +33,7 @@ let eArray = {
 };
 
 let arrayProxy = {
-  proxy: Ember.ArrayProxy.create({
+  proxy: ArrayProxy.create({
     content: eArray.array
   })
 };

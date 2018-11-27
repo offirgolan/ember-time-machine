@@ -1,7 +1,7 @@
-import Ember from 'ember';
+import Route from '@ember/routing/route';
 import TimeMachine from 'ember-time-machine';
 
-export default Ember.Route.extend({
+export default Route.extend({
   model() {
     return this.store.findRecord('user', 1);
   },

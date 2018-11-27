@@ -1,3 +1,5 @@
-import WeakMap from 'ember-weakmap';
+import Ember from 'ember';
+
+const { WeakMap } = Ember;
 
 export default new WeakMap();

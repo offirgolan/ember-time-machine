@@ -1,11 +1,7 @@
-import Ember from 'ember';
+import { get } from '@ember/object';
+import { typeOf } from '@ember/utils';
+import { isArray } from '@ember/array';
 import TimeMachine from 'ember-time-machine';
-
-const {
-  get,
-  typeOf,
-  isArray
-} = Ember;
 
 export function wrapValue(obj, key, value) {
   let state = obj.get('_rootMachineState');
