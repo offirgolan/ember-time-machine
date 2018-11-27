@@ -1,21 +1,20 @@
+import { notEmpty } from '@ember/object/computed';
+import Mixin from '@ember/object/mixin';
+import EmberObject, { computed } from '@ember/object';
+import { tryInvoke, isEmpty, isNone } from '@ember/utils';
+import { A as emberArray, isArray } from '@ember/array';
 import Ember from 'ember';
-import WeakMap from 'ember-weakmap';
 import MachineStates from 'ember-time-machine/-private/machine-states';
 import RecordUtils from 'ember-time-machine/utils/record';
 import { setObject } from 'ember-time-machine/utils/object';
 import { pathInGlobs } from 'ember-time-machine/utils/utils';
 
 const {
-  isNone,
-  isArray,
-  isEmpty,
-  computed,
-  tryInvoke,
   Logger,
-  A: emberArray
+  WeakMap
 } = Ember;
 
-export default Ember.Mixin.create({
+export default Mixin.create({
   /**
    * @property isTimeMachine
    * @type {Boolean}
@@ -98,7 +97,7 @@ export default Ember.Mixin.create({
    * @property canUndo
    * @type {Boolean}
    */
-  canUndo: computed.notEmpty('_rootMachineState.undoStack').readOnly(),
+  canUndo: notEmpty('_rootMachineState.undoStack').readOnly(),
 
   /**
    * Determines if redo operations can be done
@@ -106,7 +105,7 @@ export default Ember.Mixin.create({
    * @property canRedo
    * @type {Boolean}
    */
-  canRedo: computed.notEmpty('_rootMachineState.redoStack').readOnly(),
+  canRedo: notEmpty('_rootMachineState.redoStack').readOnly(),
 
   init() {
     this._super(...arguments);
@@ -275,7 +274,7 @@ export default Ember.Mixin.create({
       availableMachines.set(this.get('content'), this);
 
       // Create the new state that will be shared across all children of this content
-      MachineStates.set(this, Ember.Object.create({
+      MachineStates.set(this, EmberObject.create({
         undoStack: emberArray(),
         redoStack: emberArray(),
         ignoredProperties: isNone(ignoredProperties) ? [] : ignoredProperties,

@@ -1,19 +1,16 @@
-import Ember from 'ember';
+import EmberObject from '@ember/object';
+import { A as emberArray } from '@ember/array';
 import TimeMachine from 'ember-time-machine';
 import { module, test } from 'qunit';
-
-const {
-  A: emberArray
-} = Ember;
 
 let tm, state, content, undoStack, redoStack;
 let ignoredProperties, frozenProperties;
 
 module('Unit | Proxy | array', {
   beforeEach() {
-    ignoredProperties = Ember.A();
-    frozenProperties = Ember.A();
-    content = Ember.A();
+    ignoredProperties = emberArray();
+    frozenProperties = emberArray();
+    content = emberArray();
 
     tm = TimeMachine.Array.create({
       content,
@@ -185,8 +182,8 @@ test('recalibration', function(assert) {
 });
 
 test('ignoredProperties - nested', function(assert) {
-  content.pushObject(Ember.Object.create());
-  content.pushObject(Ember.Object.create());
+  content.pushObject(EmberObject.create());
+  content.pushObject(EmberObject.create());
 
   ignoredProperties.setObjects(['@each.lastName']);
 
@@ -204,7 +201,7 @@ test('ignoredProperties - nested', function(assert) {
 test('invoke', function(assert) {
   assert.expect(2);
 
-  let Obj = Ember.Object.extend({
+  let Obj = EmberObject.extend({
     save() {
       assert.ok(true);
     }

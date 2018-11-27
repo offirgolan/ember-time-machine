@@ -1,11 +1,9 @@
+import { set, get } from '@ember/object';
+import { isArray } from '@ember/array';
+import { isEmpty, isNone } from '@ember/utils';
 import Ember from 'ember';
 
 const {
-  get,
-  set,
-  isNone,
-  isArray,
-  isEmpty,
   canInvoke
 } = Ember;
 

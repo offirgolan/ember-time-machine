@@ -1,6 +1,8 @@
 import BaseSerializer from './application';
 
 export default BaseSerializer.extend({
-  include: ['tasks'],
+  init() {
+    this.set('include', ['tasks']);
+  },
   embed: true
 });
