@@ -11,7 +11,7 @@ import { pathInGlobs } from 'ember-time-machine/utils/utils';
 
 const {
   Logger,
-  WeakMap,
+  WeakMap
 } = Ember;
 
 export default Mixin.create({
